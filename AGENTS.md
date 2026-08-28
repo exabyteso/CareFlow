@@ -14,6 +14,7 @@ Cross-tool baseline for humans and coding agents (Cursor, Claude Code, etc.).
 |------|------|
 | `backend/` | API and domain logic — empty until spec + stack land |
 | `frontend/` | User-facing app — empty until spec + stack land |
+| `prototype/` | Hospital ticketing UI prototype — Vite dev server in [prototype/README.md](prototype/README.md) |
 | `docs/` | Agent SOPs, API reference stubs, testing reference |
 | `plans/` | Committed product/implementation specs |
 | `camlinedev/` | Pre-design working notes: problem, draft FRs/NFRs, grill-me questions — see [camlinedev/README.md](camlinedev/README.md) |

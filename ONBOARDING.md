@@ -20,7 +20,7 @@ phantom init
 # phantom add VAR_NAME   # when the first secret exists
 ```
 
-Do not start an app yet — there is no runnable backend or frontend.
+Do not start the production app yet — there is no runnable backend or frontend. To preview the hospital ticketing prototype, see [prototype/README.md](prototype/README.md).
 
 ## Verify
 
@@ -32,6 +32,7 @@ Test and lint commands are placeholders until a stack is chosen. See [docs/testi
 |-----------|--------|--------|
 | `backend/` | [backend/README.md](backend/README.md) | API and domain logic (stack TBD) |
 | `frontend/` | [frontend/README.md](frontend/README.md) | User-facing app (stack TBD) |
+| `prototype/` | [prototype/README.md](prototype/README.md) | Hospital ticketing UI prototype (Vite) |
 | `docs/` | [docs/README.md](docs/README.md) | Agent SOPs, API reference stubs, testing |
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
 | `camlinedev/` | [camlinedev/README.md](camlinedev/README.md) | Pre-design problem, draft FRs/NFRs, grill-me questions |

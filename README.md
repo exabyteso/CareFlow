@@ -12,6 +12,7 @@ This monorepo holds the locked product spec, research, agent scaffolding, and `b
 |-----------|--------|--------|
 | `backend/` | [backend/README.md](backend/README.md) | API and domain logic (stack TBD) |
 | `frontend/` | [frontend/README.md](frontend/README.md) | User-facing app (stack TBD) |
+| `prototype/` | [prototype/README.md](prototype/README.md) | Hospital ticketing UI prototype (Vite) |
 | `docs/` | [docs/README.md](docs/README.md) | Agent SOPs, API reference stubs, testing |
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
 | `camlinedev/` | [camlinedev/README.md](camlinedev/README.md) | Pre-design problem, draft FRs/NFRs, grill-me questions |

@@ -10,6 +10,7 @@ User-facing app for CareFlow. Stack is **not chosen yet** — this folder is a p
 
 ## Related
 
+- [../prototype/](../prototype/) — interactive hospital ticketing prototype (Vite dev server)
 - [docs/api/](../docs/api/) — HTTP contract the UI will consume
 - [research/ops/](../research/ops/) — stack and vendor research
 - [Repository root](../README.md)
