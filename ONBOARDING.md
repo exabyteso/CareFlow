@@ -33,6 +33,8 @@ After Compose is healthy, read [ARCHITECTURE.md](ARCHITECTURE.md) for target top
 
 PWA: `/` role picker (no mic), `/patient` care-seeker + 999, `/hospital` desk this-facility-only. Manifest shortcuts `/patient` and `/hospital`. Service worker is online-only (does not cache API). `/` remains a role picker. There is **no email-register / self-signup form**; Google and email/password sign-in remain on `/patient`, including **Use demo login**.
 
+Hospital ticketing UI prototype (Vite, not the PWA): [prototype/README.md](prototype/README.md) (`cd prototype && npm install && npm run dev`).
+
 `DEMO_NOTIFY=1` never live-dials. CORS allowlist is `FRONTEND_ORIGIN`. Env names: [`.env.example`](.env.example).
 
 ## Firebase (localhost)
@@ -162,6 +164,7 @@ Paste in the Render dashboard on **careflow-api** if missing. Names only — no 
 |-----------|--------|--------|
 | `backend/` | [backend/README.md](backend/README.md) | FastAPI, Alembic, health / me / recommend |
 | `frontend/` | [frontend/README.md](frontend/README.md) | Next.js 15 PWA shells |
+| `prototype/` | [prototype/README.md](prototype/README.md) | Hospital ticketing UI prototype (Vite) |
 | `docs/` | [docs/README.md](docs/README.md) | Agent SOPs, API reference, testing, [pre-design notes](docs/camlinedev.md) |
 | `docs/product-map/` | [docs/product-map/README.md](docs/product-map/README.md) | Domain map: two sides, queue vs booking |
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |

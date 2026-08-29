@@ -6,6 +6,7 @@
 
 # Dependencies and virtualenvs
 node_modules/
+dist/
 .venv/
 venv/
 backend/.venv/

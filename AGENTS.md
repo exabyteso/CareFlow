@@ -14,6 +14,7 @@ Cross-tool baseline for humans and coding agents (Cursor, Claude Code, etc.).
 |------|------|
 | `backend/` | FastAPI: `/health`, `/me`, `/facilities/recommend` (no `/v1`); Alembic `0001` |
 | `frontend/` | Next.js 15 PWA: `/` role picker, `/patient` care-seeker, `/hospital` desk |
+| `prototype/` | Hospital ticketing UI prototype — Vite dev server in [prototype/README.md](prototype/README.md) |
 | `docs/` | Agent SOPs, API reference, testing reference; pre-design notes in [docs/camlinedev.md](docs/camlinedev.md) |
 | `plans/` | Committed product/implementation specs |
 | `research/` | Market & platform research (`big-picture/` + `ops/`) — see [research/README.md](research/README.md) and [research/AGENTS.md](research/AGENTS.md) |
