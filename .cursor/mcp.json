@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "phantom": {
+      "command": "npx",
+      "args": ["-y", "phantom-secrets-mcp@0.6.0"]
+    },
+    "elevenlabs": {
+      "url": "https://api.elevenlabs.io/v1/mcp"
+    }
+  }
+}

@@ -1,0 +1,290 @@
+openapi: 3.1.0
+info:
+  title: CareFlow
+  description: 'Kenya pretriage API. There is no `/v1` prefix. Three live routes only:
+    `GET /health`, `GET /me`, and `GET /facilities/recommend`.'
+  version: 0.1.0
+servers:
+- url: http://localhost:8000
+paths:
+  /health:
+    get:
+      tags:
+      - health
+      summary: Liveness probe
+      description: Liveness probe for the CareFlow API process. Does not ping the
+        database. No authentication required.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /me:
+    get:
+      tags:
+      - auth
+      summary: Get authenticated CareFlow identity
+      description: Return the CareFlow user for the Bearer Firebase ID token. Unknown
+        UIDs are inserted as care-seekers (role=patient, facility_id null). Hospital
+        staff remain invite-only. 404 user_not_provisioned only if that insert fails.
+      operationId: getMe
+      parameters: []
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          description: Missing or invalid Firebase ID token.
+          content:
+            application/json:
+              example:
+                error:
+                  code: unauthorized
+                  message: Missing or invalid Firebase ID token.
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: Care-seeker insert failed for this Firebase account (user_not_provisioned).
+            First-time Google users are provisioned.
+          content:
+            application/json:
+              example:
+                error:
+                  code: user_not_provisioned
+                  message: No CareFlow user is provisioned for this Firebase account.
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '422':
+          description: Invalid request (not expected for this route).
+          content:
+            application/json:
+              example:
+                error:
+                  code: validation_error
+                  message: Request validation failed.
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+      security:
+      - HTTPBearer: []
+  /facilities/recommend:
+    get:
+      tags:
+      - facilities
+      summary: Rank facilities for routine (J7) or red-flag (J2) pretriage
+      description: Returns operational facilities at or above a KEPH floor for a point
+        inside Kenya. Routine ranking is desk wait_count then distance. When red_flag
+        is true, wait is ignored and the floor is at least KEPH 4.
+      operationId: recommendFacilities
+      parameters:
+      - name: lat
+        in: query
+        required: true
+        schema:
+          type: number
+          title: Lat
+        examples:
+          nairobi:
+            summary: Nairobi
+            value: -1.2921
+      - name: lng
+        in: query
+        required: true
+        schema:
+          type: number
+          title: Lng
+        examples:
+          nairobi:
+            summary: Nairobi
+            value: 36.8219
+      - name: keph_min
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 6
+          minimum: 2
+          default: 2
+          title: Keph Min
+        examples:
+          nairobi:
+            summary: Nairobi
+            value: 2
+      - name: red_flag
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: When true, ignore wait_count and require KEPH 4 or above (or
+            keph_min if higher). J2.
+          default: false
+          title: Red Flag
+        description: When true, ignore wait_count and require KEPH 4 or above (or
+          keph_min if higher). J2.
+        examples:
+          routine:
+            summary: Routine
+            value: false
+          red_flag:
+            summary: Red flag
+            value: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityRecommendResponse'
+        '400':
+          description: lat and lng lie outside the Kenya bounding box.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: location_out_of_range
+                  message: lat and lng must be inside Kenya.
+        '422':
+          description: Invalid or missing query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: validation_error
+                  message: Field required
+components:
+  schemas:
+    ErrorDetail:
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - code
+      - message
+      title: ErrorDetail
+    ErrorEnvelope:
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      type: object
+      required:
+      - error
+      title: ErrorEnvelope
+    FacilityRecommendItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        kmhfr_code:
+          type: string
+          title: Kmhfr Code
+        name:
+          type: string
+          title: Name
+        keph_level:
+          type: integer
+          title: Keph Level
+        lat:
+          type: number
+          title: Lat
+        lng:
+          type: number
+          title: Lng
+        county:
+          type: string
+          title: County
+        wait_count:
+          type: integer
+          title: Wait Count
+          description: Desk-typed demo ranking input (INV-16, X-08). Not a live HMIS
+            feed; not queue position.
+        distance_m:
+          type: number
+          title: Distance M
+      type: object
+      required:
+      - id
+      - kmhfr_code
+      - name
+      - keph_level
+      - lat
+      - lng
+      - county
+      - wait_count
+      - distance_m
+      title: FacilityRecommendItem
+    FacilityRecommendResponse:
+      properties:
+        facilities:
+          items:
+            $ref: '#/components/schemas/FacilityRecommendItem'
+          type: array
+          title: Facilities
+      type: object
+      required:
+      - facilities
+      title: FacilityRecommendResponse
+    HealthResponse:
+      properties:
+        status:
+          type: string
+          const: ok
+          title: Status
+      type: object
+      required:
+      - status
+      title: HealthResponse
+    MeResponse:
+      properties:
+        firebase_uid:
+          type: string
+          title: Firebase Uid
+        role:
+          type: string
+          enum:
+          - patient
+          - hospital_staff
+          title: Role
+        facility_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Facility Id
+        locale:
+          type: string
+          title: Locale
+        phone_e164:
+          type: string
+          title: Phone E164
+      type: object
+      required:
+      - firebase_uid
+      - role
+      - facility_id
+      - locale
+      - phone_e164
+      title: MeResponse
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
+tags:
+- name: health
+  description: Liveness probe
+- name: auth
+  description: Authenticated identity (`GET /me`)
+- name: facilities
+  description: Nairobi facility recommendation (routine ranking)

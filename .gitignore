@@ -6,10 +6,28 @@
 
 # Dependencies and virtualenvs
 node_modules/
+dist/
 .venv/
 venv/
+backend/.venv/
 __pycache__/
 *.pyc
+*.egg-info/
+
+# Firebase CLI cache
+.firebase/
+*-debug.log
+.firebaserc.bak
+
+# Next.js
+frontend/.next/
+frontend/out/
+
+# Coverage / test caches
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
 
 # Generated smoke-test output
 scripts/pdf/.smoke-out/

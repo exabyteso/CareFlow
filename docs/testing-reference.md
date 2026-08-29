@@ -4,9 +4,28 @@
 
 | Layer | Command |
 |-------|---------|
-| Default (unit + integration) | `echo 'Set TEST_COMMAND in docs/testing-reference.md'` |
-| Lint | `echo 'Set LINT_COMMAND in AGENTS.md'` |
-| E2E / slow | <!-- e.g. npm run test:e2e --> |
+| Default (unit + integration) | `cd backend && DEMO_NOTIFY=1 DATABASE_URL=postgresql://careflow:careflow@localhost:5432/careflow pytest` |
+| Lint | `cd frontend && npm run lint` |
+| E2E / slow | *(none yet)* |
+
+Compose `api` migrates itself on boot. Host pytest against **db only** still needs `alembic upgrade head` (CI path unchanged: db only → host Alembic → pytest).
+
+Typical local order — full compose (`db` + `api`); no manual Alembic exec:
+
+```bash
+docker compose up --build -d
+cd backend && DEMO_NOTIFY=1 DATABASE_URL=postgresql://careflow:careflow@localhost:5432/careflow pytest
+```
+
+Typical local order — db only (pytest / CI); still run Alembic on the host:
+
+```bash
+docker compose up -d db
+cd backend && DATABASE_ADMIN_URL=postgresql://careflow_owner:careflow_owner@localhost:5432/careflow alembic upgrade head
+DEMO_NOTIFY=1 DATABASE_URL=postgresql://careflow:careflow@localhost:5432/careflow pytest
+```
+
+`DEMO_NOTIFY=1` never live-dials. There is no backend linter in `backend/pyproject.toml`; do not invent one.
 
 ## Pyramid
 

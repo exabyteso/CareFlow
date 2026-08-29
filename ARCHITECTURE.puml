@@ -1,0 +1,210 @@
+' CareFlow system diagrams — vanilla PlantUML (no C4 includes, no HTML colors).
+' Render locally if you have PlantUML; this repo does not commit SVG/PNG or a CI job.
+' Diagrams: context | containers | components | sequence_j1 | deploy
+' Solid = running now; dashed = planned (including KMHFR live sync).
+
+@startuml context
+title CareFlow context
+
+actor "Care-seeker\n(/patient)" as CS
+actor "Hospital desk /\nclinician (/hospital)" as HD
+actor "SMS + voice call\n(+254)" as Phone
+
+rectangle "CareFlow\nKenya pretriage PWA + FastAPI + Postgres" as CF
+
+cloud "Firebase Auth" as FB
+cloud "KMHFR\n(facility SoT)" as KM
+cloud "Africa's Talking" as AT
+cloud "ElevenLabs" as EL
+cloud "Twilio" as TW
+cloud "Pawa AI" as PA
+
+CS --> CF
+HD --> CF
+CF --> Phone : confirm / reminder /\nno-show (P5)
+CF --> FB : verify ID tokens
+CF ..> KM : live sync planned\n(Nairobi seed today)
+CF --> AT
+CF --> EL
+CF --> TW
+CF --> PA
+
+note bottom of KM
+  Esri ArcGIS layer is QA / bootstrap only.
+  Not source of truth. Not SHA / AfyaKE.
+end note
+@enduml
+
+@startuml containers
+title CareFlow containers
+
+rectangle "Client (one origin)" {
+  component "Next.js 15 PWA\n/  /patient  /hospital" as PWA
+}
+
+rectangle "API" {
+  component "FastAPI\nranking + vendor keys\nno /v1 prefix" as API
+}
+
+database "PostgreSQL 16\n+ pgvector\n+ cube/earthdistance\n(D-001 only product store)" as PG
+
+cloud "Firebase Auth\n(auth only, not product store)" as FB
+
+PWA --> API : NEXT_PUBLIC_API_URL\nCORS FRONTEND_ORIGIN
+API --> PG : app role careflow\nAlembic careflow_owner
+API --> FB : Admin SDK ID-token verify
+PWA ..> FB : client SDK planned (P3)
+
+note bottom of API
+  Secrets stay on FastAPI (Phantom local / Render env).
+  PWA never holds vendor or Admin keys.
+end note
+@enduml
+
+@startuml components
+title FastAPI packages — live vs planned
+
+skinparam package<<planned>> {
+  BorderStyle dashed
+}
+skinparam component<<planned>> {
+  BorderStyle dashed
+}
+
+package "Next.js PWA (shells live)" {
+  [role picker /]
+  [/patient]
+  [/hospital]
+}
+
+package "FastAPI live" {
+  [core] as core
+  [auth] as auth
+  [facilities] as fac
+}
+
+package "FastAPI planned" <<planned>> {
+  [symptoms] as sym <<planned>>
+  [triage] as tri <<planned>>
+  [bookings] as book <<planned>>
+  [hospital] as hosp <<planned>>
+  [notes] as notes <<planned>>
+  [notify] as ntf <<planned>>
+  [voice] as voice <<planned>>
+}
+
+database "Postgres\nAlembic 0001 DDL" as PG
+cloud "Firebase" as FB
+cloud "KMHFR" as KM
+cloud "AT / EL / Twilio / Pawa" as V
+
+[/patient] --> auth
+[/patient] --> fac
+[/patient] ..> sym
+[/patient] ..> book
+[/patient] ..> voice
+[/hospital] ..> hosp
+[/hospital] ..> notes
+[role picker /] ..> voice : J8 consent (P3)
+
+core --> PG
+auth --> FB
+auth --> PG
+fac --> PG
+fac ..> KM : sync planned
+sym ..> PG
+tri ..> PG
+book ..> PG
+hosp ..> PG
+notes ..> PG
+ntf ..> PG
+ntf ..> V
+voice ..> V
+
+note right of fac
+  GET /facilities/recommend
+  wait then distance, Kenya bbox,
+  Nairobi seed. Red-flag path planned.
+end note
+@enduml
+
+@startuml sequence_j1
+title J1 care-seeker routine (target)\nSolid = API/PWA running now; dashed = planned
+
+actor "Care-seeker" as CS
+participant "Next.js PWA" as PWA
+participant "FastAPI" as API
+database "Postgres" as PG
+participant "Firebase" as FB
+participant "Notify\n(AT / EL / Twilio / Pawa)" as NV
+
+CS -> PWA : open / (role picker)
+note right of PWA : live shell; J8 voice consent planned
+CS --> PWA : J8 activate voice?
+CS --> PWA : Firebase sign-in
+PWA --> API : GET /me
+API -> FB : verify Bearer ID token
+API -> PG : users.role / facility_id
+CS --> PWA : symptoms (form or STT)
+PWA --> API : POST /symptoms/map
+API --> PG : catalog + pgvector synonyms
+note right of API : rules pick KEPH (INV-05);\nembeddings never pick the hospital
+PWA -> API : GET /facilities/recommend
+API -> PG : keph_level >= keph_min\nORDER wait_count, distance
+API -> PWA : facilities[]
+note right of API : recommend is live\n(Nairobi seed; no red-flag rank yet)
+CS --> PWA : book one facility
+PWA --> API : POST /bookings
+API --> PG : booking booked; wait_count++
+API --> NV : SMS confirm (or DEMO_NOTIFY log)
+NV --> CS : SMS
+note over NV : fail closed to text + SMS (INV-13);\nnever block booking
+CS -> PWA : goes to facility
+PWA --> API : staff POST .../arrived
+API --> PG : status arrived; wait_count--
+@enduml
+
+@startuml deploy
+title Deploy — local Compose vs Render staging
+
+node "Developer machine" {
+  component "next dev :3000\n(host, not Compose)" as NextHost
+  node "docker compose" {
+    component "api :8000" as ApiLocal
+    database "db\npgvector/pgvector:pg16" as DbLocal
+  }
+}
+
+NextHost --> ApiLocal : FRONTEND_ORIGIN\nhttp://localhost:3000
+ApiLocal --> DbLocal : DATABASE_URL (careflow)\nDATABASE_ADMIN_URL (owner)
+
+cloud "Render staging (Blueprint applied, not production)" {
+  component "careflow-web\nNode PWA\ncareflow-web.onrender.com" as WebR
+  component "careflow-api\nDocker\ncareflow-api-y00r.onrender.com" as ApiR
+  database "careflow-db\nPostgres 16 Oregon" as DbR
+  component "CareFlow static (leftover)\ncareflow-sei7.onrender.com" as StaticOld
+}
+
+WebR --> ApiR : NEXT_PUBLIC_API_URL\nfrom careflow-api RENDER_EXTERNAL_URL\n(build-time; rebuild if first deploy raced)
+ApiR --> WebR : FRONTEND_ORIGIN\nfrom careflow-web RENDER_EXTERNAL_URL
+ApiR --> DbR : DATABASE_URL + DATABASE_ADMIN_URL\nboth from careflow-db connectionString\n(staging shortcut)
+
+note bottom of StaticOld
+  Not in Blueprint exs-da91jphsrm7s73atarb0.
+  Humans suspend after careflow-web is live.
+  Agents must not delete it.
+end note
+
+note bottom of WebR
+  Not production. Do not claim NFR-AVAIL-01.
+  Blueprint exs-da91jphsrm7s73atarb0 (dev).
+  GET /health on careflow-api is live.
+  DEMO_NOTIFY=1 never live-dials.
+  Dual-URL staging shortcut: same DB owner string
+  for DATABASE_URL and DATABASE_ADMIN_URL;
+  dual careflow / careflow_owner + RLS is out of scope.
+  Phantom locally; dashboard sync:false for FIREBASE_*.
+  MCP cannot create Docker web services;
+  further API changes: git push to dev or trigger_deploy.
+end note
+@enduml

@@ -12,14 +12,16 @@ Not a diagnosis. Not SHA/AfyaKE.
 
 | Path | Role |
 |------|------|
-| `/` | J8 voice-consent greeting, then role picker (care-seeker / hospital) |
-| `/patient` | Care-seeker: disclaimer, symptoms, recommend, book |
+| `/` | Marketing homepage; role CTAs in nav and footer (`/patient`, `/hospital`) |
+| `/patient` | Care-seeker: J8 voice consent, then disclaimer, symptoms, recommend, book |
 | `/hospital` | Desk + clinician: wait count, queue, mark met/no-show |
 | `/hospital/notes` | P5 — notes capture for a booking |
 
 Manifest: `start_url` `/`, `display: standalone`, shortcuts to `/patient` and `/hospital`. One origin, one service worker.
 
 ## Domain
+
+Physical tables, enums, indexes, and `wait_count` transactions: [product-schema.md](product-schema.md).
 
 **Facility** — `kmhfr_code`, `name`, `keph_level` (2–6), `lat`, `lng`, `county`, `operational`, `wait_count`, `source`, `synced_at`. Kenya only. Drop null coordinates.
 

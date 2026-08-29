@@ -1,0 +1,11 @@
+# Phantom vault — CareFlow. Secrets live in the OS keychain, not this file.
+# Local: phantom init && phantom add VAR_NAME (names in .env.example).
+#
+# Firebase Admin needs the real PEM inside the API container. `phantom exec`
+# still overwrites FIREBASE_* with session tokens, so start Compose with
+# vault values in the shell instead (see scripts/compose-up-local.sh):
+#   ./scripts/compose-up-local.sh
+
+[phantom]
+version = "1"
+project_id = "careflow"

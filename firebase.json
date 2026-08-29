@@ -1,0 +1,17 @@
+{
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "CareFlow",
+        "supportEmail": "infoptwo@gmail.com",
+        "authorizedRedirectUris": [
+          "http://localhost:3000",
+          "http://localhost:8000",
+          "https://careflow-kenya.firebaseapp.com/__/auth/handler",
+          "https://careflow-kenya.web.app/__/auth/handler"
+        ]
+      }
+    }
+  }
+}

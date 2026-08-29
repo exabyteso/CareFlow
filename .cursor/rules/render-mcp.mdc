@@ -1,0 +1,20 @@
+---
+description: Render MCP is authenticated at user scope — parent-only; Wave 2 must not stop for missing plugin
+alwaysApply: true
+---
+
+# Render MCP (parent-only)
+
+Hosted MCP is connected in this Cursor user profile. Namespace **`user-render`**. Do **not** `/add-plugin render` and do **not** add a second `render` block to project `.cursor/mcp.json` (duplicate servers).
+
+## Wave 2 / deploy agents
+
+- **Do not stop** Wave 0 or Wave 2 because the Render marketplace plugin is missing. Probe `user-render`; call `list_workspaces`.
+- Confirmed workspace: **My Workspace** (`tea-da90etlg1s2s738q8l9g`). Pass `workspaceId` on each Render tool call (`select_workspace` is deprecated).
+- **Parent-only.** Subagents do not receive this MCP. Do not ask a worker to apply the Blueprint or set env vars.
+- Live Blueprint `exs-da91jphsrm7s73atarb0` (repo `exabyteso/CareFlow`, branch `dev`, [dashboard](https://dashboard.render.com/blueprint/exs-da91jphsrm7s73atarb0)): **careflow-api** (`srv-da91rdhsrm7s73atu4ig`, `https://careflow-api-y00r.onrender.com`, `GET /health` ok), **careflow-web** (`srv-da91re1srm7s73atu5eg`, `https://careflow-web.onrender.com`), **careflow-db** (`dpg-da91r39srm7s73attatg-a`). Do not invent a second Blueprint. MCP cannot create Docker web services — further API changes are git push to `dev` (after CI checks) or parent `trigger_deploy`.
+- Leftover static site **CareFlow** (`srv-da91buqjnfac73ccfisg`, `https://careflow-sei7.onrender.com`) is not in this Blueprint. Humans suspend it after careflow-web is live; agents must not delete it.
+- Remaining human steps (not agent work): Firebase Auth authorized domain `careflow-web.onrender.com` on project `careflow-kenya`; optional suspend of the leftover static site; `FIREBASE_*` on careflow-api (`sync: false`) if missing; rebuild careflow-web if `NEXT_PUBLIC_API_URL` baked empty. Walkthrough: [ONBOARDING.md](../../ONBOARDING.md#staging-render).
+- Never paste Render API keys, connection strings, or Firebase Admin values into chat.
+
+If `namespaceStatus` is `needsAuth`, call `mcp_auth` on `user-render` (OAuth client id `cursor`). Walkthrough: [ONBOARDING.md](../../ONBOARDING.md#cursor-plugins-and-mcp).

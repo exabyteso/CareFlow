@@ -4,9 +4,10 @@
 **Repo:** `github.com/exabyteso/CareFlow`  
 **Journeys:** [user-journeys.md](user-journeys.md)  
 **Issues:** [team-issues.md](team-issues.md)  
+**Parallel work:** [merge-clash-avoidance.md](merge-clash-avoidance.md)  
 **Domain/API:** [product-spec.md](product-spec.md)
 
-Agents: attach journeys and the issue that matches your person (P1–P5, T). Do not invent a second facility schema or a diagnosis engine.
+Agents: attach journeys, clash rules, and the issue that matches your person (P1–P5, T). Do not invent a second facility schema or a diagnosis engine.
 
 ## Decisions
 
@@ -22,6 +23,7 @@ Agents: attach journeys and the issue that matches your person (P1–P5, T). Do 
 - **Reminders:** Africa’s Talking SMS and **ElevenLabs outbound calls** (Twilio). If ElevenLabs cannot speak the booking locale (Kikuyu/Luo/Kamba/Meru), **Pawa TTS** audio is played on the same Twilio call, or SMS-only if both fail.
 - **Voice providers:** **ElevenLabs first** for English/Kiswahili TTS and phone. **[Pawa AI](https://docs.pawa-ai.com/) fallback** wherever ElevenLabs is weak or errors (see Voice routing). Keys stay on the API (`POST /voice/stt`, `POST /voice/tts`).
 - **Stack:** Next.js + FastAPI + PostgreSQL + pgvector. SMS: Africa’s Talking. Voice: ElevenLabs + Pawa. Auth: Firebase (federated). FastAPI verifies ID tokens.
+- **Primary database (D-001, locked):** PostgreSQL + pgvector is the only product store. ADR: [docs/research/postgresql-primary-store.md](../docs/research/postgresql-primary-store.md). Do not introduce MongoDB, Cassandra, CockroachDB, or Firestore for bookings, facilities, wait counts, notes, or symptom vectors. Firebase is auth only.
 - **Client:** one PWA for iteration 1 — `/patient` and `/hospital` (installable, standalone). Not two native apps.
 - **Deploy:** local `docker-compose` (API + Postgres with pgvector). Render: Docker Web Service for FastAPI, Render PostgreSQL, second Web Service for Next.js (HTTPS for PWA). Firebase stays on Google.
 
@@ -105,7 +107,7 @@ flowchart LR
   desk --> notes
 ```
 
-One PWA: `/` (voice consent then role picker), `/patient`, `/hospital`.
+One PWA: `/` (marketing homepage, role CTAs in nav and footer), `/patient` (J8 voice consent then journey), `/hospital`.
 
 ## Feature list
 
@@ -116,7 +118,7 @@ One PWA: `/` (voice consent then role picker), `/patient`, `/hospital`.
 - Red-flag bypass → nearest KEPH 4+; do not optimise for wait.
 - Book right KEPH level, nearest, fewest waiting.
 - SMS and phone reminder (ElevenLabs call; Pawa TTS if that language or API is missing).
-- Landing: spoken greet + activate voice? (J8).
+- Care-seeker path: spoken greet + activate voice on `/patient` (J8).
 
 **Hospital (`/hospital`)**
 
@@ -134,6 +136,8 @@ One PWA: `/` (voice consent then role picker), `/patient`, `/hospital`.
 
 ## Architecture
 
+System diagrams (context, containers, live vs planned packages, J1 sequence, deploy): [ARCHITECTURE.md](../ARCHITECTURE.md) and [ARCHITECTURE.puml](../ARCHITECTURE.puml). Do not duplicate those pictures here.
+
 - FastAPI in `backend/` — Dockerfile, compose (api + pgvector Postgres), Alembic, `GET /health`.
 - Firebase ID token on protected routes; `users.role` patient | hospital_staff; staff `facility_id`.
 - Facilities: Kenya KMHFR only.
@@ -146,26 +150,26 @@ One PWA: `/` (voice consent then role picker), `/patient`, `/hospital`.
 
 ## Six-person split
 
-Each person runs their own Cursor chat as orchestrator. Disjoint paths. Merge into `main`. Attach [user-journeys.md](user-journeys.md). Full issue text: [team-issues.md](team-issues.md).
+Each person runs their own Cursor chat as orchestrator. Merge into `main`. Attach [user-journeys.md](user-journeys.md), **[merge-clash-avoidance.md](merge-clash-avoidance.md)** (hubs + handshake), and the matching issue in [team-issues.md](team-issues.md).
 
 | Person | Owns | Does not touch |
 |--------|------|----------------|
-| **P1** | Docker, compose, `backend/app/core/`, `backend/app/auth/`, Alembic, Render, CI | triage, bookings, notes, notify, patient/hospital feature UI |
-| **P2** | `backend/app/facilities/`, `backend/app/symptoms/`, later triage + bookings API | Esri as SoT, frontend, notify |
-| **P3** | `frontend/app/patient/**`, landing `/` voice consent (J8), Firebase client; calls `/voice/*` | `/hospital/**`, outbound phone calls, vendor keys |
-| **P4** | `backend/app/hospital/`, `frontend/app/hospital/**` except `notes/` | triage, SMS, notes OCR |
-| **P5** | `backend/app/notes/`, `backend/app/notify/`, `backend/app/voice/` (ElevenLabs + **Pawa fallback**), `frontend/app/hospital/notes/**` | ranking, wait UI, patient landing |
-| **T** | `backend/tests/`, `frontend/e2e/`, fixtures, test plan, research expansion | production feature folders |
+| **P1** | Hub files (`main.py`, config, Alembic, CI, both lockfiles, API README) | feature folders (facilities, symptoms, hospital UI, notes, …) |
+| **P2** | `backend/app/facilities/`, `symptoms/`; Wave 2 `triage/` + `bookings/` (wait **increment**) | Esri as SoT, frontend, notify, hubs, wait **decrement** |
+| **P3** | `frontend/app/patient/**`, landing `/`, Firebase + `lib/api/client.ts` + `patient.ts` | `/hospital/**`, `backend/app/voice/`, vendor keys, hubs |
+| **P4** | `backend/app/hospital/`, `frontend/app/hospital/**` except `notes/` (wait **decrement**) | triage, SMS, notes pages, patient/**, hubs |
+| **P5** | `notes/`, `notify/`, `voice/` (ElevenLabs + **Pawa fallback**), `hospital/notes/**` | ranking, wait UI, patient landing, `hospital/page.tsx`, hubs |
+| **T** | `backend/tests/` (smoke), `frontend/e2e/`, fixtures, test plan, research expansion | production feature folders; do not duplicate `app/<pkg>/tests/` |
 
-**Wave 0 / baseline (this repo drop):** plans, journeys, issues, research scorecards, then (follow-on) Docker `/health`, PWA shells, seed recommend stub.
+**Wave 0 / baseline:** Compose, `/health`, Alembic `0001`, `/me`, seed recommend, PWA shells — **do not recreate.**
 
-**Wave 1:** P1 auth, P2 KMHFR + pgvector catalog, P3 patient/voice.
+**Wave 1:** P1 hub steward, P2 KMHFR + pgvector catalog, P3 care-seeker UI (text + consent; no voice backend).
 
 **Wave 2:** P2 rules/bookings, P3 book UI, P4 desk, P5 notes/SMS/calls, T tests.
 
 **Wave 3:** Render + E2E (J1–J9).
 
-**Subagent brief:** Owns / Delivers / Does not touch / Journeys (J1–J9) / OpenAPI operation IDs / merge into `main`.
+**Subagent brief:** Owns / Delivers / Does not touch / handshake / Journeys (J1–J9) / merge into `main`. Paste block: [merge-clash-avoidance.md](merge-clash-avoidance.md).
 
 ## Pitch-day demo
 

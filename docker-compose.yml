@@ -1,0 +1,52 @@
+# CareFlow local stack: Postgres (pgvector) + FastAPI.
+# PWA stays on the host (`next dev`). No live vendor sidecars this pass.
+#
+# Product data in Postgres: care-seeker bookings, hospital-staff facility
+# queues, pretriage catalog, and desk wait counts (wait_count is a desk
+# field, not an HMIS feed).
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: careflow_owner
+      POSTGRES_PASSWORD: careflow_owner
+      POSTGRES_DB: careflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/docker/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U careflow_owner -d careflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://careflow:careflow@db:5432/careflow
+      DATABASE_ADMIN_URL: postgresql://careflow_owner:careflow_owner@db:5432/careflow
+      FRONTEND_ORIGIN: http://localhost:3000
+      DEMO_NOTIFY: "1"
+      # Premade Daniel - Steady Broadcaster. Not a secret; keeps TTS from drifting.
+      ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-onwK4e9ZLuTAKqWW03F9}
+      # Pass-through from the process environment. PEM must be one line (\n
+      # escaped); ./scripts/compose-up-local.sh loads it from the Phantom vault.
+      FIREBASE_PROJECT_ID:
+      FIREBASE_CLIENT_EMAIL:
+      FIREBASE_PRIVATE_KEY:
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

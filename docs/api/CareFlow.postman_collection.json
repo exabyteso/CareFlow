@@ -1,0 +1,210 @@
+{
+  "info": {
+    "_postman_id": "da01d968-f6a4-4c44-95f6-daeba49234ca",
+    "name": "CareFlow",
+    "description": "Kenya pretriage API. No `/v1` prefix. Repo JSON only — do not sync to Postman Cloud.\n\nSet `baseUrl` (default `http://localhost:8000`) and, for Get me, paste a Firebase ID token into `firebaseIdToken`. Never store a real token in git.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "health",
+      "item": [
+        {
+          "name": "Get health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "operationId: `getHealth`. Liveness probe; no authentication."
+          }
+        }
+      ]
+    },
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "Get me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["me"]
+            },
+            "description": "operationId: `getMe`. Signed-in identity for the Bearer Firebase ID token. Paste a token into `firebaseIdToken`; never commit a real token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "facilities",
+      "item": [
+        {
+          "name": "Recommend facilities",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/facilities/recommend?lat=-1.2921&lng=36.8219&keph_min=2&red_flag=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["facilities", "recommend"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "-1.2921"
+                },
+                {
+                  "key": "lng",
+                  "value": "36.8219"
+                },
+                {
+                  "key": "keph_min",
+                  "value": "2"
+                },
+                {
+                  "key": "red_flag",
+                  "value": "false",
+                  "description": "true = J2 nearest KEPH 4+, ignore wait"
+                }
+              ]
+            },
+            "description": "operationId: `recommendFacilities`. Routine (J7) ranking for a point inside Kenya. Set `red_flag=true` for J2 (nearest KEPH 4+, wait ignored). Query defaults are Nairobi."
+          }
+        }
+      ]
+    },
+    {
+      "name": "symptoms",
+      "item": [
+        {
+          "name": "Map symptoms",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\":\"chest pain\",\"lang\":\"en\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/symptoms/map",
+              "host": ["{{baseUrl}}"],
+              "path": ["symptoms", "map"]
+            },
+            "description": "operationId: `mapSymptoms`. Maps text to catalog slugs. 404 until P1 include_router."
+          }
+        }
+      ]
+    },
+    {
+      "name": "bookings",
+      "item": [
+        {
+          "name": "Create booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"facility_id\":1,\"symptom_ids\":[\"chest-pain\"]}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings"]
+            },
+            "description": "operationId: `createBooking`. Patient only. Increments wait_count. 404 until P1 include_router."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "firebaseIdToken",
+      "value": ""
+    }
+  ]
+}

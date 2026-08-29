@@ -6,7 +6,7 @@ Cross-project **locked decisions**, **superseded paths**, and **risks** from pri
 
 | ID | Tier | Decision | Source | Status | Notes |
 |----|------|----------|--------|--------|-------|
-| *(add rows as projects lock decisions)* | | | | | |
+| D-001 | ops | **PostgreSQL + pgvector** is the only product datastore. MongoDB, Cassandra/Astra/Scylla, CockroachDB, and Firestore are rejected as the product store. Firebase remains auth only. | [docs/research/postgresql-primary-store.md](../docs/research/postgresql-primary-store.md), [plans/kenya-pretriage.md](../plans/kenya-pretriage.md) | **locked** 2026-08-28 | MVP: compose + pgvector. Scale: replicas → partition bookings → Citus only if measured. No Pinecone/Weaviate for MVP. |
 
 ## Known inconsistencies / open tensions
 
@@ -27,4 +27,5 @@ Cross-project **locked decisions**, **superseded paths**, and **risks** from pri
 
 | Date | Change |
 |------|--------|
+| 2026-08-28 | **D-001** locked — PostgreSQL + pgvector as primary store |
 | *(init)* | Empty starter log — populate as research projects complete |

@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Vite build output
+dist/
+
+# Vite cache
+.vite/
+
+# Local env (use Phantom / root .env for secrets)
+.env
+.env.*
+!.env.example
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+*.local

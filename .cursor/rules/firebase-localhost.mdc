@@ -1,0 +1,29 @@
+---
+description: Prompt for Firebase Admin SDK via Phantom on first local run and auth failures — never paste keys in chat
+alwaysApply: true
+---
+
+# Firebase localhost credentials
+
+Firebase is **auth only** (project **`careflow-kenya`**). Product data is PostgreSQL. Do **not** create another Firebase project unless the user cannot access this one and asks.
+
+Canonical walkthrough: **[ONBOARDING.md](../../ONBOARDING.md#firebase-localhost)**.
+
+## When to prompt
+
+Run the walkthrough (do not wait to be asked) when **any** of these are true:
+
+- First-time setup, clone, onboarding, or “run the app”
+- `docker compose`, `npm run dev`, or `GET /me`
+- 401 `unauthorized`, log line `Firebase Admin credentials are not configured`, or empty `FIREBASE_*` in Compose
+- `phantom_list_secrets` (names only) is missing `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, or `FIREBASE_PRIVATE_KEY`
+
+`GET /health` succeeding does **not** mean Firebase is configured.
+
+## How to guide
+
+1. Never ask the user to paste the service-account JSON, `private_key`, or ID tokens into chat.
+2. Prefer Phantom MCP `phantom_add_secret_interactive` / `phantom_list_secrets`. Fallback: `phantom add VAR_NAME` in the terminal (value entry stays in the prompt).
+3. Human generates the key at [Service accounts](https://console.firebase.google.com/project/careflow-kenya/settings/serviceaccounts/adminsdk). Map JSON → `FIREBASE_PROJECT_ID` (`careflow-kenya`), `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`.
+4. Restart API with `phantom exec -- docker compose up --build -d`. PWA client keys are already in `frontend/lib/firebase-config.ts` (not Admin secrets).
+5. Demo logins: [ONBOARDING.md](../../ONBOARDING.md#local-demo-accounts). The web `apiKey` is not `FIREBASE_PRIVATE_KEY`.

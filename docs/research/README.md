@@ -20,3 +20,9 @@ Decision records for options considered, trade-offs, and **why** a direction was
 
 - kebab-case: `import-dedupe-strategy.md`
 - Archive: prefix `archive-` when historical only
+
+## Records
+
+| File | Outcome | Locks |
+|------|---------|-------|
+| [postgresql-primary-store.md](postgresql-primary-store.md) | Accepted 2026-08-28 | [D-001](../research/decision-log.md) — PostgreSQL + pgvector |

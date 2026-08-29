@@ -4,7 +4,11 @@ Instructions for **Cursor and other coding agents** that create or update files 
 
 **Machine-readable contract:** handler code, schema types, generated OpenAPI, and tests—not this prose or the human README.
 
-**Reference standard:** After the first domain chapter is written, treat **`<first-domain-chapter>.md`** as the canonical example of expected depth and section layout. New or refreshed chapters should match that level of detail unless the surface is genuinely trivial (one or two routes with no shared types, no pagination, and no cross-domain behaviour). When in doubt, prefer more detail.
+**Precedence when sources disagree:** runtime handlers → generated OpenAPI → this prose.
+
+**Stack paths:** routes in `backend/app/main.py` (includes `backend/app/core/health.py`, `backend/app/auth/router.py`, `backend/app/facilities/router.py`); schemas beside those routers; `OPENAPI_PATH=backend/openapi/openapi.yaml`. Export from `backend/`: `python -m app.export_openapi`. Interactive docs: [README.md](README.md).
+
+**Reference standard:** Treat **[health.md](health.md)** as the canonical example of expected depth and section layout. New or refreshed chapters should match that level of detail unless the surface is genuinely trivial (one or two routes with no shared types, no pagination, and no cross-domain behaviour). When in doubt, prefer more detail.
 
 ## Audiences
 
@@ -13,7 +17,7 @@ When adding or refreshing API documentation under `docs/api/`, write for two aud
 1. Frontend agents that need enough context to implement screens, API clients, validation, error handling, and loading states correctly.
 2. Backend maintainers who need a human-readable companion to routes, handlers, OpenAPI, and integration tests.
 
-Do not treat these docs as the machine-readable contract. Handler code, schema types, generated OpenAPI, and tests remain the source of truth.
+Do not treat these docs as the machine-readable contract. Handler code, schema types, generated OpenAPI, and tests remain the source of truth. When they disagree: **runtime handlers → generated OpenAPI → this prose**.
 
 ## Chapter outline (required order)
 
@@ -43,7 +47,7 @@ Briefly explain what the endpoint group is for and how it fits into the product 
 
 Include explicitly:
 
-- Base path (`/v1` or `<prefix>` — do not hard-code unless showing an example).
+- Base path (CareFlow has **no `/v1`**; paths are unprefixed — `/health`, `/me`, `/facilities/recommend`).
 - **Authentication** — middleware/guard names, org/tenant scope rules, and a **scope or capability table** (`Method` | `Path` | `scope` / `capability`) when routes use fine-grained auth.
 - Important lifecycle, state-machine, or replace semantics.
 - **Money**, **time**, **file**, and **identifier** conventions that matter for this domain.
@@ -72,7 +76,7 @@ Prefer field tables. Do not summarise a complex response as "see OpenAPI" unless
 Use one heading per route:
 
 ```md
-## `GET /v1/…`
+## `GET /health`
 ```
 
 For each endpoint, include **every section that applies**, using these exact bold labels:
@@ -121,12 +125,13 @@ When the domain has stubs or intentional API gaps:
 
 Finish with implementation references:
 
-- Route registration (`backend/<route-registry>`)
-- Handler file(s) under `backend/<handlers>/`
-- Schemas under `backend/<schemas>/`
+- Route registration (`backend/app/main.py`)
+- Handler file(s) under `backend/app/core/health.py`, `backend/app/auth/`, `backend/app/facilities/`
+- Schemas beside those routers (Pydantic models in the same packages)
 - Serializers (if separate from handlers)
 - Models / persistence layer
-- Integration tests under `backend/<tests>/`
+- Integration tests under `backend/tests/`
+- Committed OpenAPI (`OPENAPI_PATH=backend/openapi/openapi.yaml`)
 
 ## Behaviour OpenAPI does not explain well
 
@@ -145,12 +150,12 @@ When API behaviour changes, update the docs in the same PR if the change affects
 
 Before finalising docs, compare against:
 
-1. `backend/<route-registry>`
+1. `backend/app/main.py` and the included routers
 2. Handler validation and schema types
-3. Integration tests
-4. `backend/openapi/openapi.yaml` (generated output if applicable)
+3. Integration tests under `backend/tests/`
+4. `backend/openapi/openapi.yaml` (`OPENAPI_PATH`; re-export with `python -m app.export_openapi` from `backend/`)
 
-Do not hand-edit generated OpenAPI without updating source schemas, JSDoc, or codegen inputs.
+Do not hand-edit generated OpenAPI. Change handlers or Pydantic models, then re-export.
 
 Use British English in prose; preserve implemented identifiers, JSON keys, route paths, and third-party strings exactly.
 
@@ -171,8 +176,8 @@ When the HTTP surface changes substantially—**a new domain chapter**, many new
 
 **Documentation subagent prompt should include:**
 
-1. Read [README.md](README.md), this file, and `<first-domain-chapter>.md` (or [conventions.md](conventions.md) if no reference chapter yet).
-2. Confirm routes in `backend/<route-registry>` and read named handlers, schemas, and integration tests (readonly exploration is fine).
+1. Read [README.md](README.md), this file, and [health.md](health.md).
+2. Confirm routes in `backend/app/main.py` and read named handlers, schemas, and integration tests (readonly exploration is fine).
 3. Draft or refresh the domain chapter to the chapter outline and quality bar above.
 4. Update [README.md](README.md) route map and [pagination-sorting-and-query-keys.md](pagination-sorting-and-query-keys.md) when list contracts change.
 
@@ -184,7 +189,7 @@ When asked to write or update API documentation:
 
 0. If the surface is large or new—or parent context is ~70% or higher—see **Subagent orchestration** above and delegate `docs/api/` work to a bounded documentation subagent.
 1. Read [README.md](README.md) and this file.
-2. Read `<first-domain-chapter>.md` and mirror its section layout and table density when available.
+2. Read [health.md](health.md) and mirror its section layout and table density.
 3. Confirm routes exist and identify handler validation and schema types.
 4. Add or update the route map row in [README.md](README.md) when the HTTP surface changes.
 5. Draft or refresh the domain chapter using the chapter outline above.

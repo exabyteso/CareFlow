@@ -1,0 +1,68 @@
+[
+  {
+    "kmhfr_code": "SEED-NBO-KNH",
+    "name": "Kenyatta National Hospital",
+    "keph_level": 5,
+    "lat": -1.3008,
+    "lng": 36.8074,
+    "county": "Nairobi",
+    "operational": true,
+    "wait_count": 11,
+    "source": "seed"
+  },
+  {
+    "kmhfr_code": "SEED-NBO-QUIET",
+    "name": "Upper Hill Health Centre",
+    "keph_level": 4,
+    "lat": -1.2925,
+    "lng": 36.821,
+    "county": "Nairobi",
+    "operational": true,
+    "wait_count": 3,
+    "source": "seed"
+  },
+  {
+    "kmhfr_code": "SEED-NBO-BUSY",
+    "name": "Upper Hill County Hospital",
+    "keph_level": 4,
+    "lat": -1.2942,
+    "lng": 36.8222,
+    "county": "Nairobi",
+    "operational": true,
+    "wait_count": 18,
+    "source": "seed"
+  },
+  {
+    "kmhfr_code": "SEED-NBO-KANG",
+    "name": "Kangemi Health Centre",
+    "keph_level": 3,
+    "lat": -1.2655,
+    "lng": 36.7448,
+    "county": "Nairobi",
+    "operational": true,
+    "wait_count": 1,
+    "source": "seed"
+  },
+  {
+    "kmhfr_code": "SEED-NBO-MLK",
+    "name": "Mama Lucy Kibaki Hospital",
+    "keph_level": 4,
+    "lat": -1.2732,
+    "lng": 36.8965,
+    "county": "Nairobi",
+    "operational": true,
+    "wait_count": 9,
+    "source": "seed"
+  },
+  {
+    "kmhfr_code": "SEED-NBO-MBAG",
+    "name": "Mbagathi County Hospital",
+    "keph_level": 4,
+    "lat": -1.3082,
+    "lng": 36.8035,
+    "county": "Nairobi",
+    "operational": true,
+    "wait_count": 6,
+    "source": "seed"
+  }
+]
