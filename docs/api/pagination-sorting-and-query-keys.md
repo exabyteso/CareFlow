@@ -20,7 +20,7 @@ Master reference for **list endpoints** on the CareFlow API. Domain chapters sho
 
 | Method | Path | Pagination | Sort allowlist | Filter notes |
 |--------|------|--------------|----------------|--------------|
-| `GET` | `/facilities/recommend` | None (full array) | Server-fixed: `wait_count ASC`, then `earth_distance ASC` | `operational`; `keph_level >= keph_min` (default 2). Query: `lat`, `lng`, `keph_min`. Unknown keys ignored. |
+| `GET` | `/facilities/recommend` | None (full array) | Routine: `wait_count ASC`, then `earth_distance ASC`. Red flag (`red_flag=true`): `earth_distance ASC` only. | `operational`; `keph_level >= keph_floor`. Routine floor is `keph_min` (default 2). Red-flag floor is `max(4, keph_min)`. Query: `lat`, `lng`, `keph_min`, `red_flag`. Unknown keys ignored. |
 
 `wait_count` is a desk-typed demo ranking input, **not HMIS**.
 

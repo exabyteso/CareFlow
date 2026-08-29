@@ -96,7 +96,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/facilities/recommend?lat=-1.2921&lng=36.8219&keph_min=2",
+              "raw": "{{baseUrl}}/facilities/recommend?lat=-1.2921&lng=36.8219&keph_min=2&red_flag=false",
               "host": ["{{baseUrl}}"],
               "path": ["facilities", "recommend"],
               "query": [
@@ -111,10 +111,87 @@
                 {
                   "key": "keph_min",
                   "value": "2"
+                },
+                {
+                  "key": "red_flag",
+                  "value": "false",
+                  "description": "true = J2 nearest KEPH 4+, ignore wait"
                 }
               ]
             },
-            "description": "operationId: `recommendFacilities`. Routine (J7) ranking for a point inside Kenya. Query defaults are Nairobi."
+            "description": "operationId: `recommendFacilities`. Routine (J7) ranking for a point inside Kenya. Set `red_flag=true` for J2 (nearest KEPH 4+, wait ignored). Query defaults are Nairobi."
+          }
+        }
+      ]
+    },
+    {
+      "name": "symptoms",
+      "item": [
+        {
+          "name": "Map symptoms",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\":\"chest pain\",\"lang\":\"en\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/symptoms/map",
+              "host": ["{{baseUrl}}"],
+              "path": ["symptoms", "map"]
+            },
+            "description": "operationId: `mapSymptoms`. Maps text to catalog slugs. 404 until P1 include_router."
+          }
+        }
+      ]
+    },
+    {
+      "name": "bookings",
+      "item": [
+        {
+          "name": "Create booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"facility_id\":1,\"symptom_ids\":[\"chest-pain\"]}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings"]
+            },
+            "description": "operationId: `createBooking`. Patient only. Increments wait_count. 404 until P1 include_router."
           }
         }
       ]

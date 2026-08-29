@@ -169,6 +169,7 @@ Paste in the Render dashboard on **careflow-api** if missing. Names only — no 
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
 | `research/` | [research/README.md](research/README.md) | Market (`big-picture/`) and ops research |
 | `scripts/` | [scripts/README.md](scripts/README.md) | PDF generation and other root scripts |
+| `mosescodes/` | [mosescodes/README.md](mosescodes/README.md) | P2 working notes (Moses): facilities, KMHFR, symptoms, bookings |
 
 Add a row when you create a new top-level directory. Keep command details in linked READMEs — do not duplicate them here.
 

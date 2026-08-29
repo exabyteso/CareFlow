@@ -1,4 +1,4 @@
-"""Nairobi facility seed and routine recommend (FR-PL-03 / FR-PL-04)."""
+"""Nairobi facility seed and recommend (J7 routine, J2 red flag)."""
 
 from app.facilities.router import router
 from app.facilities.seed import ensure_nairobi_seed
