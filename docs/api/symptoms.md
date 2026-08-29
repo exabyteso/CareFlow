@@ -20,7 +20,7 @@ Journey **J1** (routine) and **J8** (spoken text after STT): map an utterance on
 
 **Side effects:** missing `symptoms` / `symptom_synonyms` rows are inserted from `backend/data/kenya-symptoms.json` (canonical rows plus Wave 1 hash vectors). Existing runtime catalog rows are not overwritten. No booking.
 
-**Hub status:** the router lives in `backend/app/symptoms/router.py`. It is **not** mounted until P1 `include_router` (see [mosescodes/handshake-p1.md](../../mosescodes/handshake-p1.md)).
+**Hub status:** the router lives in `backend/app/symptoms/router.py`. It is **not** mounted until P1 `include_router` in `backend/app/main.py` (see [merge-clash-avoidance.md](../../plans/merge-clash-avoidance.md)).
 
 **Related surfaces** (other chapters):
 
@@ -166,5 +166,4 @@ STT is P5 (`POST /voice/stt`). This route consumes **text** only.
 - Embeddings: `backend/app/symptoms/embeddings.py`
 - Seed: `backend/app/symptoms/seed.py`
 - Catalog: `backend/data/kenya-symptoms.json`
-- Handshake: [mosescodes/handshake-p1.md](../../mosescodes/handshake-p1.md)
 - Tests: `backend/app/symptoms/tests/`, `backend/app/triage/tests/`

@@ -56,7 +56,9 @@ class Settings(BaseSettings):
     def unescape_private_key_newlines(cls, value: object) -> object:
         if not isinstance(value, str):
             return value
-        key = value.lstrip("\ufeff").strip("\r")
+        # Outer whitespace first so wrapping quotes are still the first/last chars
+        # when Render/dotenv appends a trailing newline after the closing quote.
+        key = value.lstrip("\ufeff").strip()
         if len(key) >= 2 and key[0] == key[-1] and key[0] in {'"', "'"}:
             key = key[1:-1]
         key = key.lstrip("\ufeff")

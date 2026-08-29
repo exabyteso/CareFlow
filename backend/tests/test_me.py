@@ -1,6 +1,11 @@
-"""GET /me — 401 / 404 user_not_provisioned / 200 patient and staff."""
+"""GET /me — 401 / 200 patient (seeded + auto-provision) and staff."""
+
+import re
+import uuid
 
 _AUTH = {"Authorization": "Bearer test-token"}
+_KE_MOBILE = re.compile(r"^\+254[17][0-9]{8}$")
+_SEEDED_PHONES = {"+254711111111", "+254722222222"}
 
 
 def test_me_missing_auth_returns_401(client):
@@ -17,16 +22,29 @@ def test_me_garbage_token_returns_401(client):
     assert response.json()["error"]["code"] == "unauthorized"
 
 
-def test_me_unknown_uid_returns_404_not_provisioned(client, db_reset, mock_firebase_uid):
-    mock_firebase_uid("not-a-provisioned-user")
-    response = client.get("/me", headers=_AUTH)
-    assert response.status_code == 404
-    error = response.json()["error"]
-    assert error["code"] == "user_not_provisioned"
-    assert "message" in error
+def test_me_unknown_uid_auto_provisions_patient(client, mock_firebase_uid):
+    unknown_uid = f"not-a-provisioned-user-{uuid.uuid4()}"
+    mock_firebase_uid(unknown_uid)
+    first = client.get("/me", headers=_AUTH)
+    assert first.status_code == 200
+    body = first.json()
+    assert body["firebase_uid"] == unknown_uid
+    assert body["role"] == "patient"
+    assert body["facility_id"] is None
+    assert body["locale"] == "en"
+    assert _KE_MOBILE.match(body["phone_e164"])
+    assert body["phone_e164"] not in _SEEDED_PHONES
+
+    second = client.get("/me", headers=_AUTH)
+    assert second.status_code == 200
+    again = second.json()
+    assert again["phone_e164"] == body["phone_e164"]
+    assert again["firebase_uid"] == body["firebase_uid"]
+    assert again["role"] == body["role"]
+    assert again == body
 
 
-def test_me_patient_200(client, db_reset, mock_firebase_uid):
+def test_me_patient_200(client, mock_firebase_uid):
     mock_firebase_uid("demo-patient")
     response = client.get("/me", headers=_AUTH)
     assert response.status_code == 200
@@ -38,7 +56,7 @@ def test_me_patient_200(client, db_reset, mock_firebase_uid):
     assert body["phone_e164"] == "+254711111111"
 
 
-def test_me_staff_200_with_facility_id(client, db_reset, mock_firebase_uid):
+def test_me_staff_200_with_facility_id(client, mock_firebase_uid):
     mock_firebase_uid("demo-staff")
     response = client.get("/me", headers=_AUTH)
     assert response.status_code == 200

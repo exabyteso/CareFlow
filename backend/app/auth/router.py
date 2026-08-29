@@ -27,8 +27,10 @@ class MeResponse(BaseModel):
     operation_id="getMe",
     summary="Get authenticated CareFlow identity",
     description=(
-        "Return the provisioned CareFlow user for the Bearer Firebase ID token. "
-        "This is signed-in identity only; it is not signup."
+        "Return the CareFlow user for the Bearer Firebase ID token. "
+        "Unknown UIDs are inserted as care-seekers (role=patient, facility_id null). "
+        "Hospital staff remain invite-only. "
+        "404 user_not_provisioned only if that insert fails."
     ),
     responses={
         401: {
@@ -48,7 +50,8 @@ class MeResponse(BaseModel):
         404: {
             "model": ErrorEnvelope,
             "description": (
-                "No CareFlow user is provisioned for this Firebase account."
+                "Care-seeker insert failed for this Firebase account "
+                "(user_not_provisioned). First-time Google users are provisioned."
             ),
             "content": {
                 "application/json": {

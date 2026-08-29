@@ -31,7 +31,7 @@ cd frontend && npm install && npm run dev   # :3000
 
 After Compose is healthy, read [ARCHITECTURE.md](ARCHITECTURE.md) for target topology versus what is running now. For hosted **staging** (Render Blueprint, not production; live inventory), see [Staging (Render)](#staging-render).
 
-PWA: `/` role picker (no mic), `/patient` care-seeker + 999, `/hospital` desk this-facility-only. Manifest shortcuts `/patient` and `/hospital`. Service worker is online-only (does not cache API). There is **no PWA login UI this pass** (`frontend/app/page.tsx` is still a role picker).
+PWA: `/` role picker (no mic), `/patient` care-seeker + 999, `/hospital` desk this-facility-only. Manifest shortcuts `/patient` and `/hospital`. Service worker is online-only (does not cache API). `/` remains a role picker. There is **no email-register / self-signup form**; Google and email/password sign-in remain on `/patient`, including **Use demo login**.
 
 `DEMO_NOTIFY=1` never live-dials. CORS allowlist is `FRONTEND_ORIGIN`. Env names: [`.env.example`](.env.example).
 
@@ -74,16 +74,16 @@ Agents: follow this on onboarding, `docker compose` / `npm run dev`, or any Fire
 5. **PWA on localhost:3000** — no extra Firebase env. From `frontend/`: `npm install && npm run dev`. Client init is `frontend/lib/firebase.ts`. There is no sign-in form on `/` this pass.
 6. **Re-seed** (optional): `docker compose exec api python -m app.seed`. With Admin credentials, this upserts the demo Firebase Auth users below.
 
-### Local demo accounts
+### Demo accounts (local and staging)
 
-**Local/demo only. Never use these credentials on a production Firebase project.**
+**Demo only. Never use these credentials on a production Firebase project.** These logins apply to **localhost** and staging [careflow-web.onrender.com](https://careflow-web.onrender.com) (same Firebase project `careflow-kenya`). Postgres `users` rows are per environment.
 
 | Email | Password | Role | Facility | Firebase UID |
 |-------|----------|------|----------|--------------|
 | `patient@careflow.local` | `CareflowDemo1!` | care-seeker (`patient`) | — | `demo-patient` |
 | `staff@careflow.local` | `CareflowDemo1!` | hospital staff | Kenyatta National Hospital (`SEED-NBO-KNH`) | `demo-staff` |
 
-These are for operators, curl / `GET /me`, and a later PWA login UI — not a form on `/` this pass. `GET /me` needs `Authorization: Bearer <Firebase ID token>` ([docs/api/me.md](docs/api/me.md)).
+On `/patient`, **Use demo login** fills the care-seeker email and password (the hint shows the email only). There is no email-register form; `/` is still a role picker. `GET /me` needs `Authorization: Bearer <Firebase ID token>` ([docs/api/me.md](docs/api/me.md)).
 
 ### When it fails
 
@@ -91,8 +91,9 @@ These are for operators, curl / `GET /me`, and a later PWA login UI — not a fo
 |---------|--------------|------------|
 | `GET /me` → 401 `unauthorized` | Missing/invalid Bearer, or Admin SDK not configured | Walkthrough steps 2–4. Confirm Compose was started with `phantom exec`. |
 | API log: `Firebase Admin credentials are not configured; skipping demo Auth upsert` | `FIREBASE_*` empty in the `api` container | Same — Phantom add + `phantom exec -- docker compose up --build -d`. |
-| `user_not_provisioned` (404) | Token is valid but UID is not `demo-patient` / `demo-staff` (and not otherwise seeded) | Expected for unknown Google accounts. Seed or use a demo email. |
-| Google popup closes: `auth/unauthorized-domain` | Host not in Auth authorized domains | `localhost` is default. Staging PWA: add `careflow-web.onrender.com` ([Staging (Render)](#staging-render)). Custom hosts: [Auth settings](https://console.firebase.google.com/project/careflow-kenya/authentication/settings). |
+| API log: `Firebase Auth upsert failed … (RefreshError)` | `FIREBASE_PRIVATE_KEY` PEM shape — wrapping quotes, BOM, `\r`, or `\\n` instead of real newlines | Runtime strips wrapping quotes, BOM, `\r`, and turns `\\n` into newlines. Failure logs a non-secret PEM shape (BEGIN present, newline count, length) — never the key. Local: `phantom exec -- docker compose up`. Staging: human re-pastes `FIREBASE_*` on **careflow-api** (`sync: false`). |
+| `user_not_provisioned` (404) | Care-seeker INSERT failed (phone unique exhausted, database error) | Google first login should provision as a patient. Not expected for an unknown Google UID. Check API logs and Postgres. |
+| Google popup closes: `auth/unauthorized-domain` | Host not in Auth authorized domains | Add `careflow-web.onrender.com` on project **`careflow-kenya`** if staging returns this. `localhost` is default. Custom hosts: [Auth settings](https://console.firebase.google.com/project/careflow-kenya/authentication/settings). |
 
 Agents: if Phantom MCP is connected, call `phantom_list_secrets` (names only) before prompting. If `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, or `FIREBASE_PRIVATE_KEY` are missing, start this walkthrough immediately — do not treat `/health` as “Firebase is working.”
 
@@ -125,8 +126,8 @@ Render MCP **cannot** create Docker web services. Further API changes: git push 
 
 ### Remaining human steps (not agent work)
 
-1. Dashboard → **careflow-api** → Environment: paste `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (`sync: false`) if not already set. Never into chat. This is the remaining auth gate for `GET /me` if secrets were missing.
-2. Firebase Auth [authorized domains](https://console.firebase.google.com/project/careflow-kenya/authentication/settings) on project **`careflow-kenya`**: add `careflow-web.onrender.com` (and `careflow-sei7.onrender.com` only if that static site stays). Do **not** create a second Firebase project.
+1. Dashboard → **careflow-api** → Environment: paste `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (`sync: false`) if not already set. Never into chat. If API logs `Firebase Auth upsert failed … (RefreshError)`, re-paste `FIREBASE_PRIVATE_KEY` with real newlines (not wrapping quotes / `\\n`); runtime also strips BOM and `\r`. This is the remaining auth gate for `GET /me` if secrets were missing.
+2. Firebase Auth [authorized domains](https://console.firebase.google.com/project/careflow-kenya/authentication/settings) on project **`careflow-kenya`**: add `careflow-web.onrender.com` (required if staging Google sign-in returns `auth/unauthorized-domain`; also `careflow-sei7.onrender.com` only if that static site stays). Do **not** create a second Firebase project.
 3. After careflow-web is live, **suspend** leftover static site CareFlow. Agents must not delete it.
 4. If the first web deploy baked an empty `NEXT_PUBLIC_API_URL`, rebuild/redeploy **careflow-web** after the API URL exists.
 
@@ -166,7 +167,6 @@ Paste in the Render dashboard on **careflow-api** if missing. Names only — no 
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
 | `research/` | [research/README.md](research/README.md) | Market (`big-picture/`) and ops research |
 | `scripts/` | [scripts/README.md](scripts/README.md) | PDF generation and other root scripts |
-| `mosescodes/` | [mosescodes/README.md](mosescodes/README.md) | P2 working notes (Moses): facilities, KMHFR, symptoms, bookings |
 
 Add a row when you create a new top-level directory. Keep command details in linked READMEs — do not duplicate them here.
 
@@ -229,7 +229,7 @@ phantom add VAR_NAME
 | `FRONTEND_ORIGIN` | CORS allowlist for the PWA (default `http://localhost:3000`). |
 | `NEXT_PUBLIC_API_URL` | PWA API base (default `http://localhost:8000`). |
 | `DEMO_NOTIFY` | `1` = never live-dial or SMS-blast. Keep `1` unless you intend vendor traffic. |
-| `FIREBASE_*` | Admin SDK for `GET /me` and boot seed (Phantom). Walkthrough: [Firebase (localhost)](#firebase-localhost). Demo UIDs in [Local demo accounts](#local-demo-accounts). |
+| `FIREBASE_*` | Admin SDK for `GET /me` and boot seed (Phantom). Walkthrough: [Firebase (localhost)](#firebase-localhost). Demo UIDs in [Demo accounts (local and staging)](#demo-accounts-local-and-staging). |
 | `ELEVENLABS_API_KEY` | App runtime for later TTS/STT/calls. **Not** required for hosted ElevenLabs MCP OAuth. |
 | `ELEVENLABS_VOICE_ID` | ElevenLabs TTS voice. Product default is Daniel - Steady Broadcaster (`onwK4e9ZLuTAKqWW03F9`). |
 
