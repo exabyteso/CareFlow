@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import base64
+import importlib
+
+router_mod = importlib.import_module("app.voice.router")
 
 _AUTH = {"Authorization": "Bearer test-token"}
 
@@ -23,7 +26,7 @@ def test_stt_success(voice_client, db_reset, mock_firebase_uid, monkeypatch):
         assert lang == "en"
         return "headache and fever", "elevenlabs"
 
-    monkeypatch.setattr("app.voice.router.transcribe", fake_transcribe)
+    monkeypatch.setattr(router_mod, "transcribe", fake_transcribe)
 
     response = voice_client.post(
         "/voice/stt",
@@ -59,7 +62,7 @@ def test_stt_provider_failure_502(voice_client, db_reset, mock_firebase_uid, mon
     def fail_transcribe(*_args, **_kwargs):
         raise VoiceProviderError("cascade", "all providers down")
 
-    monkeypatch.setattr("app.voice.router.transcribe", fail_transcribe)
+    monkeypatch.setattr(router_mod, "transcribe", fail_transcribe)
 
     response = voice_client.post(
         "/voice/stt",
@@ -81,7 +84,7 @@ def test_tts_returns_audio(voice_client, db_reset, mock_firebase_uid, monkeypatc
         assert lang == "sw"
         return b"\xff\xfb", "pawa"
 
-    monkeypatch.setattr("app.voice.router.synthesize", fake_synthesize)
+    monkeypatch.setattr(router_mod, "synthesize", fake_synthesize)
 
     response = voice_client.post(
         "/voice/tts",

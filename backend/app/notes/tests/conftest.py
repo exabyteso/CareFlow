@@ -2,55 +2,93 @@
 
 from __future__ import annotations
 
+import os
 import sys
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import make_url
+from sqlalchemy.orm import Session, sessionmaker
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[3]
 if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 
 from app.auth.seed import ensure_demo_users  # noqa: E402
+from app.core.config import normalize_database_url  # noqa: E402
 from app.core.db import SessionLocal  # noqa: E402
-from app.main import app  # noqa: E402
+from app.core.errors import register_exception_handlers  # noqa: E402
+from app.core.rls import set_rls_gucs  # noqa: E402
 from app.notes.router import router as notes_router  # noqa: E402
 
-if not any(getattr(route, "path", "") == "/hospital/bookings/{booking_id}/notes" for route in app.routes):
-    app.include_router(notes_router)
+_LOCAL_OWNER = "postgresql://careflow_owner:careflow_owner@localhost:5432/careflow"
+_LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "db"})
+_DELETE_BOOKING_ROWS = (
+    "DELETE FROM note_images",
+    "DELETE FROM notes",
+    "DELETE FROM notify_jobs",
+    "DELETE FROM booking_symptoms",
+    "DELETE FROM booking_instant",
+    "DELETE FROM booking_appointments",
+    "DELETE FROM booking_facility_snapshots",
+    "DELETE FROM bookings",
+)
 
 
-@pytest.fixture
-def notes_client() -> Generator[TestClient, None, None]:
-    with TestClient(app) as test_client:
-        yield test_client
+def _guarded_owner_url() -> str:
+    raw = os.environ.get("DATABASE_ADMIN_URL") or _LOCAL_OWNER
+    url = normalize_database_url(raw)
+    parsed = make_url(url)
+    if (
+        parsed.host not in _LOCAL_HOSTS
+        or parsed.database != "careflow"
+        or parsed.username != "careflow_owner"
+    ):
+        raise RuntimeError(
+            "notes tests refuse owner-level cleanup outside the local CareFlow database"
+        )
+    return url
 
 
-@pytest.fixture
-def db_reset() -> None:
-    session = SessionLocal()
+@contextmanager
+def _owner_session() -> Iterator[Session]:
+    engine = create_engine(_guarded_owner_url(), pool_pre_ping=True)
+    factory = sessionmaker(bind=engine, expire_on_commit=False, class_=Session)
+    session = factory()
     try:
-        session.execute(text("DELETE FROM note_images"))
-        session.execute(text("DELETE FROM notes"))
-        session.execute(text("DELETE FROM notify_jobs"))
-        session.execute(text("DELETE FROM booking_facility_snapshots"))
-        session.execute(text("DELETE FROM booking_symptoms"))
-        session.execute(text("DELETE FROM booking_instant"))
-        session.execute(text("DELETE FROM booking_appointments"))
-        session.execute(text("DELETE FROM bookings"))
-        session.execute(text("DELETE FROM symptom_synonyms"))
-        session.execute(text("DELETE FROM symptoms"))
-        session.execute(text("DELETE FROM users"))
-        session.execute(text("DELETE FROM facilities"))
+        yield session
         session.commit()
     except Exception:
         session.rollback()
         raise
     finally:
         session.close()
+        engine.dispose()
+
+
+def _wipe_booking_rows() -> None:
+    with _owner_session() as session:
+        for statement in _DELETE_BOOKING_ROWS:
+            session.execute(text(statement))
+
+
+@pytest.fixture
+def notes_client() -> Generator[TestClient, None, None]:
+    app = FastAPI()
+    app.include_router(notes_router)
+    register_exception_handlers(app)
+    with TestClient(app) as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def db_reset() -> None:
+    _wipe_booking_rows()
 
 
 @pytest.fixture
@@ -88,6 +126,10 @@ def sample_booking_id(db_reset: None) -> int:
         patient_id = session.execute(
             text("SELECT id FROM users WHERE firebase_uid = 'demo-patient'")
         ).scalar_one()
+
+        set_rls_gucs(
+            session, user_id=int(patient_id), role="patient", facility_id=None
+        )
 
         booking_id = session.execute(
             text(
