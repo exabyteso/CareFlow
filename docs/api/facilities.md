@@ -1,10 +1,10 @@
 # Facilities (recommend)
 
-Journey **J7** only: rank operational facilities for routine (non-red-flag) pretriage. This is **not** diagnosis, not booking, and not a live KMHFR sync.
+Journeys **J7** (routine) and **J2** (red flag): rank operational facilities for pretriage. This is **not** diagnosis, not booking, and not a live KMHFR sync.
 
 ## Domain context
 
-`GET /facilities/recommend` returns facilities the care-seeker can consider after a KEPH floor is known. Ranking uses desk-typed `wait_count` then great-circle distance. **`wait_count` is a demo ranking input, not HMIS** (INV-16, X-08). It is not queue position.
+`GET /facilities/recommend` returns facilities the care-seeker can consider after a KEPH floor is known. Routine ranking uses desk-typed `wait_count` then great-circle distance. Red-flag ranking (`red_flag=true`) ignores wait and uses a floor of at least KEPH 4. **`wait_count` is a demo ranking input, not HMIS** (INV-16, X-08). It is not queue position. The field is still returned on red-flag rows so the PWA can show it; it is not used to sort.
 
 **Base path:** `/facilities` (no `/v1`). This chapter documents **`GET /recommend` only**.
 
@@ -18,13 +18,13 @@ Journey **J7** only: rank operational facilities for routine (non-red-flag) pret
 
 **Identifiers:** `id` is an integer facility primary key; `kmhfr_code` is the registry / seed string.
 
-**Query vs response casing:** query keys and JSON keys are both snake_case (`lat`, `lng`, `keph_min`, `wait_count`, `distance_m`).
+**Query vs response casing:** query keys and JSON keys are both snake_case (`lat`, `lng`, `keph_min`, `red_flag`, `wait_count`, `distance_m`).
 
 **Seed:** if `facilities` is empty, the handler loads committed Nairobi rows from `backend/data/nairobi-facilities.json`. If any row already exists, seed is a no-op. This pass does **not** call live KMHFR.
 
 **Side effects:** empty-table Nairobi seed insert only. No booking, wait increment, or cache invalidation.
 
-**Not in this chapter:** bookings, symptoms/map, voice, hospital queue, wait `PATCH`, red-flag distance-only KEPH 4+ ranking.
+**Not in this chapter:** bookings, symptoms/map, voice, hospital queue, wait `PATCH`. Live KMHFR sync is not implemented.
 
 See [conventions.md](conventions.md) and [pagination-sorting-and-query-keys.md](pagination-sorting-and-query-keys.md).
 
@@ -34,6 +34,8 @@ See [conventions.md](conventions.md) and [pagination-sorting-and-query-keys.md](
 |-------|---------|
 | `GET /health` | [health.md](health.md) |
 | `GET /me` | [me.md](me.md) |
+| `POST /symptoms/map` | [symptoms.md](symptoms.md) (unmounted until P1) |
+| `POST /bookings` | [bookings.md](bookings.md) (unmounted until P1) |
 
 ## Shared types
 
@@ -61,7 +63,7 @@ No cursor or offset wrapper. Bare object with a `facilities` array — not a `da
 
 ## `GET /facilities/recommend`
 
-- **Purpose** — Rank operational facilities at or above a KEPH floor by shortest desk wait, then nearest, for a point inside Kenya (J7 routine recommend).
+- **Purpose** — Rank operational facilities at or above a KEPH floor for a point inside Kenya. Routine (J7): shortest desk wait, then nearest. Red flag (J2): nearest KEPH 4+ (or `keph_min` if higher); wait is not used to sort.
 - **Path parameters** — None.
 - **Query parameters**
 
@@ -70,8 +72,9 @@ No cursor or offset wrapper. Bare object with a `facilities` array — not a `da
 | `lat` | number | yes | — | Care-seeker latitude. |
 | `lng` | number | yes | — | Care-seeker longitude. |
 | `keph_min` | integer | no | `2` | Inclusive KEPH floor. Allowed **2–6**. |
+| `red_flag` | boolean | no | `false` | When `true`, ignore wait for sort; floor is `max(4, keph_min)`. |
 
-Unknown query keys are **ignored**. `keph_min` outside 2–6 → **422** `validation_error`. Missing `lat`/`lng` → **422** `validation_error`.
+Unknown query keys are **ignored**. `keph_min` outside 2–6 → **422** `validation_error`. Missing `lat`/`lng` → **422** `validation_error`. Invalid `red_flag` → **422** `validation_error`.
 
 - **Request body** — None.
 - **Success response** — `200`:
@@ -104,11 +107,12 @@ Unknown query keys are **ignored**. `keph_min` outside 2–6 → **422** `valida
 | 422 | `validation_error` | Missing/invalid query (including `keph_min` not in 2–6). |
 
 - **Behaviour notes**
-  - Filter: `operational` is true **and** `keph_level >= keph_min`.
-  - Sort: `wait_count ASC`, then `earth_distance` ASC (Postgres `cube` / `earthdistance`).
+  - Filter: `operational` is true **and** `keph_level >= keph_floor`. Routine `keph_floor` is `keph_min`. Red flag `keph_floor` is `max(4, keph_min)`.
+  - Sort (routine): `wait_count ASC`, then `earth_distance` ASC (Postgres `cube` / `earthdistance`).
+  - Sort (red flag): `earth_distance` ASC only. Do not order by `wait_count`.
   - Empty table → Nairobi seed insert, then the same query.
   - Non-operational rows are excluded even if they exist in seed.
-  - Red-flag ranking (distance-only, KEPH 4+) is **not** implemented here.
+  - A Level 3 facility (seed Kangemi) never appears when `red_flag` is true.
 - **Try it**
 
   | Field | Value |
@@ -121,6 +125,12 @@ Unknown query keys are **ignored**. `keph_min` outside 2–6 → **422** `valida
 
   ```bash
   curl "http://localhost:8000/facilities/recommend?lat=-1.2921&lng=36.8219&keph_min=2"
+  ```
+
+  Red flag (same point):
+
+  ```bash
+  curl "http://localhost:8000/facilities/recommend?lat=-1.2921&lng=36.8219&red_flag=true"
   ```
 
 ## Stable error codes and messages
@@ -139,6 +149,7 @@ Does not create a booking. Hospital staff must not treat this list as “all fac
 | Surface | Call |
 |---------|------|
 | Care-seeker recommend list (J7) | `GET /facilities/recommend?lat=&lng=&keph_min=` |
+| Care-seeker red flag (J2) | `GET /facilities/recommend?lat=&lng=&keph_min=&red_flag=true` |
 | Hospital desk | **Do not** use this route to choose workplace; this facility only via `/me` |
 
 ## Frontend notes
@@ -146,6 +157,7 @@ Does not create a booking. Hospital staff must not treat this list as “all fac
 - Always pass `lat` and `lng` from a Kenya point; handle 400 `location_out_of_range` as “outside coverage”.
 - Show `wait_count` as a **demo wait**, never as HMIS or live queue length.
 - Sort is server-side; do not re-sort unless product asks.
+- Pass `red_flag=true` only when catalog rules marked a red flag. Do not re-rank by wait on the client.
 - Online-only: the service worker must not cache this response.
 - Optional auth: do not require `/me` before recommend.
 
@@ -153,16 +165,17 @@ Does not create a booking. Hospital staff must not treat this list as “all fac
 
 | Area | Status |
 |------|--------|
-| `GET /facilities/recommend` (J7) | **Implemented** |
+| `GET /facilities/recommend` (J7 routine) | **Implemented** |
+| Red-flag recommend (`red_flag=true`, J2) | **Implemented** (seed ranking only) |
 | Live KMHFR sync | **Not implemented** (seed only; no SoT decision-log row this pass) |
-| Red-flag recommend | **Not implemented** |
 | Bookings / wait PATCH / queue | **Not implemented** (out of this chapter) |
 
 ## Reference files
 
 - Route: `backend/app/facilities/router.py`
+- Ranking floor: `backend/app/facilities/ranking.py`
 - Seed: `backend/app/facilities/seed.py`, `backend/data/nairobi-facilities.json`
 - App include: `backend/app/main.py`
 - Errors: `backend/app/core/errors.py`
 - OpenAPI: `backend/openapi/openapi.yaml` (`operationId` `recommendFacilities`, tag `facilities`)
-- Tests: `backend/tests/test_recommend.py`
+- Tests: `backend/tests/test_recommend.py` (routine smoke), `backend/app/facilities/tests/` (red flag)
