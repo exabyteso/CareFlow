@@ -18,6 +18,7 @@ Cross-tool baseline for humans and coding agents (Cursor, Claude Code, etc.).
 | `plans/` | Committed product/implementation specs |
 | `research/` | Market & platform research (`big-picture/` + `ops/`) — see [research/README.md](research/README.md) and [research/AGENTS.md](research/AGENTS.md) |
 | `scripts/` | Root operational scripts (PDF pipeline) |
+| `mosescodes/` | P2 working notes (Moses) — [mosescodes/README.md](mosescodes/README.md); not application code |
 
 ## Directory documentation
 
