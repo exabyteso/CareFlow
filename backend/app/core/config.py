@@ -54,9 +54,16 @@ class Settings(BaseSettings):
     @field_validator("firebase_private_key", mode="before")
     @classmethod
     def unescape_private_key_newlines(cls, value: object) -> object:
-        if isinstance(value, str):
-            return value.replace("\\n", "\n")
-        return value
+        if not isinstance(value, str):
+            return value
+        # Outer whitespace first so wrapping quotes are still the first/last chars
+        # when Render/dotenv appends a trailing newline after the closing quote.
+        key = value.lstrip("\ufeff").strip()
+        if len(key) >= 2 and key[0] == key[-1] and key[0] in {'"', "'"}:
+            key = key[1:-1]
+        key = key.lstrip("\ufeff")
+        key = key.replace("\\n", "\n").replace("\\r", "\r")
+        return key.replace("\r\n", "\n").replace("\r", "\n")
 
     @field_validator("frontend_origin", mode="before")
     @classmethod
@@ -68,6 +75,16 @@ class Settings(BaseSettings):
     @property
     def sqlalchemy_database_url(self) -> str:
         return normalize_database_url(self.database_url)
+
+
+def pem_shape_diagnostics(key: str) -> str:
+    """Non-secret PEM shape for logs. Never includes key material."""
+    text = key if isinstance(key, str) else ""
+    return (
+        f"has_begin_private_key={'BEGIN PRIVATE KEY' in text} "
+        f"newline_count={text.count('\n')} "
+        f"length={len(text)}"
+    )
 
 
 @lru_cache

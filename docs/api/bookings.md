@@ -14,7 +14,7 @@ Journey **J1** / **J2**: care-seeker books a recommended facility. This is an **
 |--------|------|------|-------------|
 | `POST` | `/bookings` | patient | `bookings` |
 
-**Hub status:** router is in `backend/app/bookings/router.py`. **Not mounted** until P1 `include_router` ([handshake-p1.md](../../mosescodes/handshake-p1.md)).
+**Hub status:** router is in `backend/app/bookings/router.py`. **Not mounted** until P1 `include_router` in `backend/app/main.py` (see [merge-clash-avoidance.md](../../plans/merge-clash-avoidance.md)).
 
 **Side effects:** `facilities.wait_count + 1`. Snapshot `wait_count_at_book` is the value **before** the bump. No notify job.
 
@@ -117,4 +117,3 @@ P4 marks arrived/no-show and decrements wait. P5 sends SMS from the booking id. 
 - Create txn: `backend/app/bookings/create.py`
 - Rules: `backend/app/triage/rules.py`
 - Tests: `backend/app/bookings/tests/test_create.py`
-- Handshake: `mosescodes/handshake-p1.md`

@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import threading
 
-from app.core.config import get_settings
+from app.core.config import get_settings, pem_shape_diagnostics
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,10 @@ def _credentials_configured() -> bool:
         and settings.firebase_client_email
         and settings.firebase_private_key
     )
+
+
+def _pem_diag() -> str:
+    return pem_shape_diagnostics(get_settings().firebase_private_key)
 
 
 def _ensure_firebase_app() -> None:
@@ -113,8 +117,9 @@ def upsert_demo_auth_users() -> None:
         _ensure_firebase_app()
     except Exception as exc:
         logger.warning(
-            "Firebase Admin could not be initialized (%s); skipping demo Auth upsert.",
+            "Firebase Admin could not be initialized (%s); skipping demo Auth upsert. %s",
             type(exc).__name__,
+            _pem_diag(),
         )
         return
 
@@ -134,18 +139,61 @@ def upsert_demo_auth_users() -> None:
             _upsert_auth_user(uid, email, DEMO_PASSWORD)
         except Exception as exc:
             logger.warning(
-                "Firebase Auth upsert failed for uid=%s (%s).",
+                "Firebase Auth upsert failed for uid=%s (%s). %s",
                 uid,
                 type(exc).__name__,
+                _pem_diag(),
             )
 
 
 def _upsert_auth_user(uid: str, email: str, password: str) -> None:
+    """Create or update a demo Firebase Auth user (custom UID).
+
+    Custom UIDs and email reclaim apply only to the two demo identities.
+    """
     from firebase_admin import auth
+
+    from app.auth.seed import (
+        DEMO_PATIENT_EMAIL,
+        DEMO_PATIENT_UID,
+        DEMO_STAFF_EMAIL,
+        DEMO_STAFF_UID,
+    )
+
+    demo_uids = {DEMO_PATIENT_UID, DEMO_STAFF_UID}
+    demo_emails = {DEMO_PATIENT_EMAIL, DEMO_STAFF_EMAIL}
+    if uid not in demo_uids or email not in demo_emails:
+        return
+
+    kwargs = {
+        "email": email,
+        "password": password,
+        "email_verified": True,
+        "disabled": False,
+    }
 
     try:
         auth.get_user(uid)
+        uid_exists = True
     except auth.UserNotFoundError:
-        auth.create_user(uid=uid, email=email, password=password)
-        return
-    auth.update_user(uid, email=email, password=password, disabled=False)
+        uid_exists = False
+
+    try:
+        if uid_exists:
+            auth.update_user(uid, **kwargs)
+        else:
+            auth.create_user(uid=uid, **kwargs)
+    except auth.EmailAlreadyExistsError:
+        if email not in demo_emails:
+            raise
+        colliding = auth.get_user_by_email(email)
+        if colliding.uid == uid:
+            auth.update_user(uid, **kwargs)
+            return
+        auth.delete_user(colliding.uid)
+        try:
+            auth.get_user(uid)
+        except auth.UserNotFoundError:
+            auth.create_user(uid=uid, **kwargs)
+            return
+        auth.update_user(uid, **kwargs)

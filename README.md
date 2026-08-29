@@ -18,7 +18,6 @@ This monorepo holds the locked product spec, research, agent scaffolding, and th
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
 | `research/` | [research/README.md](research/README.md) | Market (`big-picture/`) and ops research |
 | `scripts/` | [scripts/README.md](scripts/README.md) | PDF generation and other root scripts |
-| `mosescodes/` | [mosescodes/README.md](mosescodes/README.md) | P2 working notes (Moses): facilities, KMHFR, symptoms, bookings |
 
 **Local development:** [ONBOARDING.md](ONBOARDING.md)  
 **Agents and coding tools:** [AGENTS.md](AGENTS.md)  

@@ -82,7 +82,7 @@ GitHub Mermaid above is the target graph; puml `components` uses dashed borders 
 
 ## Trust and data
 
-Bearer **Firebase ID token** on protected routes. Role (`patient` | `hospital_staff`) and staff `facility_id` live in `users`, keyed by `firebase_uid`. Demo UIDs: `demo-patient` / `demo-staff`. RLS session GUCs (`app.user_id`, `app.role`, `app.facility_id`) isolate bookings/notes/notify — helpers exist in `core/rls.py`; Wave 2 routes will call them.
+Bearer **Firebase ID token** on protected routes. Role (`patient` | `hospital_staff`) and staff `facility_id` live in `users`, keyed by `firebase_uid`. Demo UIDs: `demo-patient` / `demo-staff`. Unknown Firebase UIDs auto-provision as care-seekers (`role=patient`); hospital staff remain seeded (invite-only). RLS session GUCs (`app.user_id`, `app.role`, `app.facility_id`) isolate bookings/notes/notify — helpers exist in `core/rls.py`; Wave 2 routes will call them.
 
 `GET /facilities/recommend` is **open** (auth ignored). `wait_count` is a **desk-typed** ranking input (and booking lifecycle increment/decrement), not an HMIS feed ([INV-16](docs/product-map/05-invariants.md)). Product-map still has an open question on bodies-in-room vs incoming ([04-queue-and-bookings.md](docs/product-map/04-queue-and-bookings.md)); this architecture follows the current spec: desk-typed `wait_count`.
 
@@ -105,7 +105,7 @@ Journeys J1–J9: [plans/user-journeys.md](plans/user-journeys.md). Target J1 se
 | Surface | As-built | Target |
 |---------|----------|--------|
 | `GET /health` | Live, no DB ping | Same |
-| `GET /me` | Live; Firebase Admin + demo UIDs | Same |
+| `GET /me` | Live; Firebase Admin; unknown UIDs auto-provision as care-seekers; staff remain seeded | Same |
 | `GET /facilities/recommend` | Live; Nairobi seed, wait-then-distance, Kenya bbox; **`red_flag=true`** nearest KEPH 4+ | + KMHFR sync |
 | Symptom catalog JSON | Live (`backend/data/kenya-symptoms.json`, 52 rows); DB seed helper not on boot yet | + embeddings + `POST /symptoms/map` |
 | `POST /symptoms/map` | Handler in `symptoms/`; **not** in `main.py` (P1 handshake) | P2 + include_router |

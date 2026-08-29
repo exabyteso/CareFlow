@@ -37,6 +37,8 @@ services:
       DATABASE_ADMIN_URL: postgresql://careflow_owner:careflow_owner@db:5432/careflow
       FRONTEND_ORIGIN: http://localhost:3000
       DEMO_NOTIFY: "1"
+      # Premade Daniel - Steady Broadcaster. Not a secret; keeps TTS from drifting.
+      ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-onwK4e9ZLuTAKqWW03F9}
       # Optional: `phantom exec -- docker compose up` so boot seed can upsert Auth.
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}

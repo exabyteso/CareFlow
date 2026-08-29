@@ -1,4 +1,15 @@
-"""Idempotent synthetic demo users (no public signup, no unknown-UID provision)."""
+"""Idempotent synthetic demo users (no public signup).
+
+Unknown Firebase UIDs are auto-provisioned as patients on first ``GET /me``
+(see ``deps.get_current_user``). Hospital staff remain invite-only
+(``demo-staff`` seed only). ``ensure_demo_users`` still must not insert
+arbitrary UIDs.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import re
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -13,13 +24,31 @@ DEMO_PATIENT_EMAIL = "patient@careflow.local"
 DEMO_STAFF_EMAIL = "staff@careflow.local"
 DEMO_PASSWORD = "CareflowDemo1!"
 
+KE_MOBILE_E164_RE = re.compile(r"^\+254[17][0-9]{8}$")
+_RESERVED_DEMO_PHONES = frozenset({DEMO_PATIENT_PHONE, DEMO_STAFF_PHONE})
+
+
+def synthetic_patient_phone(uid: str, attempt: int = 0) -> str:
+    """Deterministic unique Kenya mobile derived from UID (+ attempt for retries).
+
+    Prefers ``+2547`` + 8 digits. Never returns the reserved demo phones.
+    """
+    n = 0
+    while True:
+        digest = hashlib.sha256(f"{uid}\0{attempt}\0{n}".encode("utf-8")).digest()
+        eight = int.from_bytes(digest[:8], "big") % 100_000_000
+        phone = f"+2547{eight:08d}"
+        if phone not in _RESERVED_DEMO_PHONES and KE_MOBILE_E164_RE.fullmatch(phone):
+            return phone
+        n += 1
+
 
 def ensure_demo_users(session: Session) -> None:
     """Insert demo care-seeker + hospital-staff rows if missing.
 
     Staff ``facility_id`` comes from ``facilities.kmhfr_code = SEED-NBO-KNH``
     (S-38: hospital staff without a facility is not a valid session).
-    Unknown Firebase UIDs are never inserted.
+    Unknown Firebase UIDs are never inserted here.
     """
     from app.facilities.seed import ensure_nairobi_seed
 

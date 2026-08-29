@@ -4,7 +4,7 @@ Who is signed in: care-seeker or hospital staff for this session.
 
 ## Domain context
 
-`GET /me` returns the CareFlow `users` row for a verified Firebase ID token. It is **not** signup. Unknown UIDs are never inserted. Local demo accounts are the only provisioned UIDs unless an operator seeds more: `patient@careflow.local` (`demo-patient`) and `staff@careflow.local` (`demo-staff`).
+`GET /me` returns the CareFlow `users` row for a verified Firebase ID token. Care-seekers are auto-provisioned on first valid token (`role=patient`, `facility_id=null`, `ui_locale=en`). Hospital staff remain invite-only (`demo-staff` seed). There is **no public email-register / self-signup form**; Google and email/password sign-in remain. Demo emails `patient@careflow.local` (`demo-patient`) and `staff@careflow.local` (`demo-staff`) work on **localhost and staging** ([careflow-web.onrender.com](https://careflow-web.onrender.com)) — same Firebase project `careflow-kenya`; Postgres rows are per environment.
 
 **Base path:** `/me` (no `/v1`).
 
@@ -70,10 +70,10 @@ Hospital staff example: `firebase_uid` `demo-staff` (`staff@careflow.local`), `r
 | HTTP | `error.code` | When |
 |------|----------------|------|
 | 401 | `unauthorized` | Missing header, not `Bearer`, empty token, or Firebase verification failed (including Admin SDK not configured). |
-| 404 | `user_not_provisioned` | Token is valid but no `users` row for that UID. No self-signup. |
+| 404 | `user_not_provisioned` | Token is valid but the care-seeker INSERT could not complete (phone unique exhausted, database error). Not returned for a first-time Google user when the insert succeeds. |
 | 422 | `validation_error` | Not expected for this route (no query/body schema). Documented as `ErrorEnvelope` to match the global validation handler. |
 
-- **Behaviour notes** — On first authenticated call, demo rows `demo-patient` / `demo-staff` are inserted if missing (and Nairobi facilities are seeded if the table is empty). Compose boot seed (`python -m app.seed`) is additive — it provisions the same demo rows (and Firebase Auth users when `FIREBASE_*` is set) at API start. Lazy-seed on `/me` still runs if rows are missing. Other UIDs are never auto-created. `DEMO_NOTIFY` does not affect this route. Runtime still reads `Authorization` via `get_bearer_token`; OpenAPI advertises HTTP Bearer only. A missing or invalid Bearer still returns **401** `unauthorized`.
+- **Behaviour notes** — If the verified UID is missing from `users`, the handler **INSERT**s a care-seeker (`role=patient`, `facility_id=NULL`, `ui_locale=en`) with `ON CONFLICT DO NOTHING`. Phone is the token `phone_number` when it matches `^\+254[17][0-9]{8}$`; otherwise a deterministic synthetic `+2547XXXXXXXX` that is never the demo numbers `+254711111111` / `+254722222222`. Hospital staff are **not** auto-provisioned. **404** `user_not_provisioned` only if that insert cannot complete — not for a first-time Google user. Demo rows `demo-patient` / `demo-staff` are inserted if missing (and Nairobi facilities are seeded if the table is empty). Compose boot seed (`python -m app.seed`) is additive — it provisions the same demo rows (and Firebase Auth users when `FIREBASE_*` is set) at API start. Lazy-seed on `/me` still runs if rows are missing. `DEMO_NOTIFY` does not affect this route. Runtime still reads `Authorization` via `get_bearer_token`; OpenAPI advertises HTTP Bearer only. A missing or invalid Bearer still returns **401** `unauthorized`.
 - **Try it**
 
   | Field | Value |
@@ -94,7 +94,7 @@ Hospital staff example: `firebase_uid` `demo-staff` (`staff@careflow.local`), `r
 | Code / message | HTTP | When |
 |----------------|------|------|
 | `unauthorized` / Missing or invalid Firebase ID token. | 401 | Bad or missing Bearer. |
-| `user_not_provisioned` / No CareFlow user is provisioned for this Firebase account. | 404 | Valid token, unknown UID. |
+| `user_not_provisioned` / No CareFlow user is provisioned for this Firebase account. | 404 | Valid token, but the care-seeker INSERT could not complete. |
 
 ## Relationship to other domains
 
@@ -110,8 +110,10 @@ Hospital desk UI must use `facility_id` from `/me` — never a care-seeker-picke
 ## Frontend notes
 
 - Send `Authorization: Bearer …` on every `/me` call.
-- 401 → signed-out / retry token. 404 → account not provisioned (do not invent a signup form this pass).
-- Map `role: "patient"` to care-seeker chrome; `hospital_staff` to desk chrome.
+- 401 → signed-out / retry token.
+- Google first-time sign-in should **200** as `role: "patient"`. **404** `user_not_provisioned` is rare (insert failure), not “unknown Google”.
+- Do not invent a registration / email-register form this pass.
+- Map `role: "patient"` to care-seeker chrome; `hospital_staff` to desk chrome. An unknown UID that then hits `/hospital/*` is a patient and those routes return **403** `forbidden` (staff remain invite-only).
 - Do not cache `/me` in the service worker.
 
 ## Implementation status snapshot (backend)
@@ -119,7 +121,9 @@ Hospital desk UI must use `facility_id` from `/me` — never a care-seeker-picke
 | Area | Status |
 |------|--------|
 | `GET /me` | **Implemented** |
-| Public signup / unknown-UID provision | **Not implemented** (intentional) |
+| Unknown-UID care-seeker provision | **Implemented** |
+| Staff auto-provision (`hospital_staff`) | **Not implemented** (intentional) |
+| Public email-register / self-signup form | **Not implemented** (intentional) |
 | Firebase Admin in production | Needs `FIREBASE_*` via Phantom |
 
 ## Reference files
@@ -130,4 +134,4 @@ Hospital desk UI must use `facility_id` from `/me` — never a care-seeker-picke
 - Demo seed: `backend/app/auth/seed.py`
 - Errors: `backend/app/core/errors.py`
 - OpenAPI: `backend/openapi/openapi.yaml` (`operationId` `getMe`, tag `auth`, `HTTPBearer` scheme)
-- Tests: `backend/tests/test_me.py`
+- Tests: `backend/tests/test_me.py`, `backend/app/auth/tests/`

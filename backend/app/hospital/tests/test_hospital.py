@@ -1,5 +1,7 @@
 """Hospital desk: staff isolation, wait PATCH, arrived/no-show decrement."""
 
+import uuid
+
 from app.hospital.tests.helpers import (
     delete_booking,
     insert_instant_booking,
@@ -19,6 +21,13 @@ def test_queue_missing_auth_returns_401(client):
 
 def test_queue_patient_returns_403(client, mock_firebase_uid, staff_facility_id):
     mock_firebase_uid("demo-patient")
+    response = client.get("/hospital/queue", headers=_AUTH)
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "forbidden"
+
+
+def test_queue_unknown_uid_returns_403(client, mock_firebase_uid):
+    mock_firebase_uid(f"unknown-uid-{uuid.uuid4()}")
     response = client.get("/hospital/queue", headers=_AUTH)
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "forbidden"
