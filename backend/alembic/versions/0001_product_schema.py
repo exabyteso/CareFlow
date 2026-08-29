@@ -6,7 +6,9 @@ Create Date: 2026-08-28
 
 Applies plans/product-schema.md §4 DDL (extensions, enums, tables, indexes,
 triggers, functions, RLS ENABLE+FORCE, policies, views). Grants table/sequence/
-view rights to app role careflow (created by init, not this revision).
+view rights to app role careflow when that role exists (compose init).
+Staging Render uses a single owner connection and has no careflow role —
+GRANTs are skipped so alembic upgrade head can boot.
 """
 
 from __future__ import annotations
@@ -24,11 +26,16 @@ depends_on = None
 _SQL_PATH = Path(__file__).with_name("0001_product_schema.sql")
 
 _GRANTS = """
-GRANT USAGE ON SCHEMA public TO careflow;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO careflow;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO careflow;
-GRANT SELECT ON v_instant_queue_positions TO careflow;
-GRANT SELECT ON v_queue_patient_display TO careflow;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'careflow') THEN
+    GRANT USAGE ON SCHEMA public TO careflow;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO careflow;
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO careflow;
+    GRANT SELECT ON v_instant_queue_positions TO careflow;
+    GRANT SELECT ON v_queue_patient_display TO careflow;
+  END IF;
+END $$;
 """
 
 

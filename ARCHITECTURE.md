@@ -90,7 +90,7 @@ Bearer **Firebase ID token** on protected routes. Role (`patient` | `hospital_st
 
 **Routine** ([INV-05](docs/product-map/05-invariants.md)–06, 08): utterance → catalog (`POST /symptoms/map`) → **rules** pick `keph_min` (embeddings never pick the hospital) → `keph_level >= keph_min` → lowest `wait_count` → nearest.
 
-**Red flag** ([INV-07](docs/product-map/05-invariants.md)): ignore wait; nearest KEPH 4+; never a quieter distant Level 2. Recommend today is routine-only.
+**Red flag** ([INV-07](docs/product-map/05-invariants.md)): ignore wait; nearest KEPH 4+; never a quieter distant Level 2. **Recommend today is routine or red-flag** via `red_flag` on `GET /facilities/recommend`.
 
 **Notify** ([INV-13](docs/product-map/05-invariants.md)): voice/STT/TTS/SMS/call failure must not block booking — fail closed to text + SMS / `DEMO_NOTIFY` log.
 
@@ -98,7 +98,7 @@ Journeys J1–J9: [plans/user-journeys.md](plans/user-journeys.md). Target J1 se
 
 ## Deploy
 
-**Local:** [docker-compose.yml](docker-compose.yml) services `db` + `api`; PWA on the host (`next dev` `:3000`). **Render:** [render.yaml](render.yaml) names `careflow-api` + `careflow-db` — **not applied**. Next.js as a second HTTPS Web Service is planned (Wave 3). Secrets: Phantom locally; Render env in production. `DEMO_NOTIFY=1` never live-dials. Puml: `deploy`.
+**Local:** [docker-compose.yml](docker-compose.yml) services `db` + `api`; PWA on the host (`next dev` `:3000`). **Staging (Render):** Blueprint [`exs-da91jphsrm7s73atarb0`](https://dashboard.render.com/blueprint/exs-da91jphsrm7s73atarb0) is applied on branch `dev` — **careflow-api** ([`https://careflow-api-y00r.onrender.com`](https://careflow-api-y00r.onrender.com), Docker, `GET /health` ok), **careflow-web** ([`https://careflow-web.onrender.com`](https://careflow-web.onrender.com), Node), **careflow-db** (Postgres 16, Oregon). Not production (do not claim NFR-AVAIL-01). Render MCP cannot create Docker web services; further API changes are git push to `dev` (after CI checks) or parent `trigger_deploy`. Push/`merge` to `dev` then GitHub Actions **CI / test** and **CI / lint** then Render `autoDeployTrigger: checksPass` — not a GitHub Actions deploy job, not production on `main`. `DEMO_NOTIFY=1`. Secrets: Phantom locally; dashboard `sync: false` (Firebase Admin on the API). Staging uses the same owner `connectionString` for `DATABASE_URL` and `DATABASE_ADMIN_URL` (dual `careflow` / `careflow_owner` + RLS is out of scope). Puml: `deploy`. Inventory and remaining human steps: [ONBOARDING.md](ONBOARDING.md#staging-render).
 
 ## As-built vs target
 
@@ -106,9 +106,10 @@ Journeys J1–J9: [plans/user-journeys.md](plans/user-journeys.md). Target J1 se
 |---------|----------|--------|
 | `GET /health` | Live, no DB ping | Same |
 | `GET /me` | Live; Firebase Admin + demo UIDs | Same |
-| `GET /facilities/recommend` | Live; Nairobi seed, wait-then-distance, Kenya bbox; **no** red-flag rank | + KMHFR sync; red-flag nearest KEPH 4+ |
-| `POST /symptoms/map` | Not in `main.py` | P2 |
-| `POST /bookings`, hospital queue / wait / arrived / no-show | Not in `main.py` | P2 / P4 |
+| `GET /facilities/recommend` | Live; Nairobi seed, wait-then-distance, Kenya bbox; **`red_flag=true`** nearest KEPH 4+ | + KMHFR sync |
+| Symptom catalog JSON | Live (`backend/data/kenya-symptoms.json`, 52 rows); DB seed helper not on boot yet | + embeddings + `POST /symptoms/map` |
+| `POST /symptoms/map` | Handler in `symptoms/`; **not** in `main.py` (P1 handshake) | P2 + include_router |
+| `POST /bookings`, hospital queue / wait / arrived / no-show | Create package unmounted; queue/arrived are P4 | P2 / P4 |
 | `POST /voice/stt`, `/voice/tts`, notify, notes | Not in `main.py` | P5 |
 | PWA `/` | Role picker; **no** J8 mic consent | J8 then role picker |
 | PWA `/patient`, `/hospital` | Shells (disclaimer / 999 / placeholder) | Book + desk |
@@ -117,7 +118,7 @@ Journeys J1–J9: [plans/user-journeys.md](plans/user-journeys.md). Target J1 se
 | `symptoms`, `triage`, `bookings`, `hospital`, `notes`, `notify`, `voice` | Planned | Per [team-issues.md](plans/team-issues.md) |
 | Alembic `0001` | Full product DDL | Used by later packages |
 | Compose `db` + `api` | Running locally | Same |
-| Render + Next HTTPS | IaC only | Wave 3 |
+| Render + Next HTTPS | Staging live: careflow-api `https://careflow-api-y00r.onrender.com` (`GET /health` ok), careflow-web `https://careflow-web.onrender.com`, careflow-db Postgres 16 Oregon. Leftover static `careflow-sei7.onrender.com` not in Blueprint | Not production; remaining: Firebase authorized domain + optional static suspend |
 
 HTTP chapters for live routes: [docs/api/](docs/api/). OpenAPI and Postman artefacts: [docs/api/README.md](docs/api/README.md).
 
@@ -132,4 +133,4 @@ HTTP chapters for live routes: [docs/api/](docs/api/). OpenAPI and Postman artef
 | [docs/product-map/](docs/product-map/) | Domain map (not stack) |
 | [docs/api/](docs/api/) | Live HTTP reference |
 | [docs/research/postgresql-primary-store.md](docs/research/postgresql-primary-store.md) | D-001 ADR |
-| [ONBOARDING.md](ONBOARDING.md) | Local Compose / Phantom |
+| [ONBOARDING.md](ONBOARDING.md) | Local Compose / Phantom / Render staging |

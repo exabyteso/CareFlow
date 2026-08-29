@@ -165,7 +165,7 @@ API --> PG : status arrived; wait_count--
 @enduml
 
 @startuml deploy
-title Deploy — local Compose vs Render
+title Deploy — local Compose vs Render staging
 
 node "Developer machine" {
   component "next dev :3000\n(host, not Compose)" as NextHost
@@ -178,17 +178,33 @@ node "Developer machine" {
 NextHost --> ApiLocal : FRONTEND_ORIGIN\nhttp://localhost:3000
 ApiLocal --> DbLocal : DATABASE_URL (careflow)\nDATABASE_ADMIN_URL (owner)
 
-cloud "Render (render.yaml not applied)" {
-  component "careflow-api\nDocker Web Service" as ApiR
-  database "careflow-db\nPostgres 16" as DbR
-  component "Next.js PWA\nHTTPS (planned)" as NextR
+cloud "Render staging (Blueprint applied, not production)" {
+  component "careflow-web\nNode PWA\ncareflow-web.onrender.com" as WebR
+  component "careflow-api\nDocker\ncareflow-api-y00r.onrender.com" as ApiR
+  database "careflow-db\nPostgres 16 Oregon" as DbR
+  component "CareFlow static (leftover)\ncareflow-sei7.onrender.com" as StaticOld
 }
 
-NextR ..> ApiR : second Web Service\nplanned Wave 3
-ApiR --> DbR
+WebR --> ApiR : NEXT_PUBLIC_API_URL\nfrom careflow-api RENDER_EXTERNAL_URL\n(build-time; rebuild if first deploy raced)
+ApiR --> WebR : FRONTEND_ORIGIN\nfrom careflow-web RENDER_EXTERNAL_URL
+ApiR --> DbR : DATABASE_URL + DATABASE_ADMIN_URL\nboth from careflow-db connectionString\n(staging shortcut)
 
-note bottom of NextHost
+note bottom of StaticOld
+  Not in Blueprint exs-da91jphsrm7s73atarb0.
+  Humans suspend after careflow-web is live.
+  Agents must not delete it.
+end note
+
+note bottom of WebR
+  Not production. Do not claim NFR-AVAIL-01.
+  Blueprint exs-da91jphsrm7s73atarb0 (dev).
+  GET /health on careflow-api is live.
   DEMO_NOTIFY=1 never live-dials.
-  Phantom injects secrets locally; Render dashboard env in production.
+  Dual-URL staging shortcut: same DB owner string
+  for DATABASE_URL and DATABASE_ADMIN_URL;
+  dual careflow / careflow_owner + RLS is out of scope.
+  Phantom locally; dashboard sync:false for FIREBASE_*.
+  MCP cannot create Docker web services;
+  further API changes: git push to dev or trigger_deploy.
 end note
 @enduml

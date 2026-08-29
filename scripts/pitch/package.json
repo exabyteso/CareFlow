@@ -1,0 +1,11 @@
+{
+  "name": "@careflow/pitch-deck",
+  "private": true,
+  "description": "Regenerate docs/careflow-investor-pitch.pptx",
+  "scripts": {
+    "generate": "node generate-investor-deck.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^3.12.0"
+  }
+}

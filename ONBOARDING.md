@@ -29,7 +29,7 @@ cd frontend && npm install && npm run dev   # :3000
 
 `phantom exec -- docker compose up --build -d` is enough for migrate + seed **and** injects `FIREBASE_*` into `api`. Plain `docker compose up` is fine for `/health` only. Do **not** run a separate `alembic upgrade head` on this first-time compose path. **Host pytest against `db` only** still needs Alembic on the host — see [docs/testing-reference.md](docs/testing-reference.md) (CI starts `db` only, then host Alembic + pytest).
 
-After Compose is healthy, read [ARCHITECTURE.md](ARCHITECTURE.md) for target topology versus what is running now.
+After Compose is healthy, read [ARCHITECTURE.md](ARCHITECTURE.md) for target topology versus what is running now. For hosted **staging** (Render Blueprint, not production; live inventory), see [Staging (Render)](#staging-render).
 
 PWA: `/` role picker (no mic), `/patient` care-seeker + 999, `/hospital` desk this-facility-only. Manifest shortcuts `/patient` and `/hospital`. Service worker is online-only (does not cache API). There is **no PWA login UI this pass** (`frontend/app/page.tsx` is still a role picker).
 
@@ -92,7 +92,7 @@ These are for operators, curl / `GET /me`, and a later PWA login UI — not a fo
 | `GET /me` → 401 `unauthorized` | Missing/invalid Bearer, or Admin SDK not configured | Walkthrough steps 2–4. Confirm Compose was started with `phantom exec`. |
 | API log: `Firebase Admin credentials are not configured; skipping demo Auth upsert` | `FIREBASE_*` empty in the `api` container | Same — Phantom add + `phantom exec -- docker compose up --build -d`. |
 | `user_not_provisioned` (404) | Token is valid but UID is not `demo-patient` / `demo-staff` (and not otherwise seeded) | Expected for unknown Google accounts. Seed or use a demo email. |
-| Google popup closes: `auth/unauthorized-domain` | Host not in Auth authorized domains | `localhost` is default. Custom hosts: [Auth settings](https://console.firebase.google.com/project/careflow-kenya/authentication/settings). |
+| Google popup closes: `auth/unauthorized-domain` | Host not in Auth authorized domains | `localhost` is default. Staging PWA: add `careflow-web.onrender.com` ([Staging (Render)](#staging-render)). Custom hosts: [Auth settings](https://console.firebase.google.com/project/careflow-kenya/authentication/settings). |
 
 Agents: if Phantom MCP is connected, call `phantom_list_secrets` (names only) before prompting. If `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, or `FIREBASE_PRIVATE_KEY` are missing, start this walkthrough immediately — do not treat `/health` as “Firebase is working.”
 
@@ -107,6 +107,54 @@ Host pytest talks to Compose `db` only. Full compose (`db` + `api`) migrates on 
 
 Once `api` is up, Swagger UI is at [http://localhost:8000/docs](http://localhost:8000/docs). Committed OpenAPI: [backend/openapi/openapi.yaml](backend/openapi/openapi.yaml). Postman (repo JSON only): [docs/api/CareFlow.postman_collection.json](docs/api/CareFlow.postman_collection.json) and [docs/api/CareFlow.postman_environment.json](docs/api/CareFlow.postman_environment.json).
 
+## Staging (Render)
+
+Not production. Do not treat this as NFR-AVAIL-01. Local Compose remains the default for development.
+
+**Blueprint applied** (2026-08-28+): [`exs-da91jphsrm7s73atarb0`](https://dashboard.render.com/blueprint/exs-da91jphsrm7s73atarb0) — repo `exabyteso/CareFlow`, branch **`dev`**, workspace **My Workspace** (`tea-da90etlg1s2s738q8l9g`). Do **not** create a second Blueprint. IaC remains [render.yaml](render.yaml).
+
+| Service | Kind | ID | Public URL / notes |
+|---------|------|----|--------------------|
+| **careflow-api** | Docker (`./backend/Dockerfile`), Starter, Oregon | `srv-da91rdhsrm7s73atu4ig` | [`https://careflow-api-y00r.onrender.com`](https://careflow-api-y00r.onrender.com) — live. `GET /health` → `{"status":"ok"}`. `autoDeployTrigger: checksPass`. |
+| **careflow-web** | Node (`./build.sh` / `cd frontend && npm run start`), Starter | `srv-da91re1srm7s73atu5eg` | [`https://careflow-web.onrender.com`](https://careflow-web.onrender.com). First web build may have raced the API hostname (`NEXT_PUBLIC_API_URL` is build-time). |
+| **careflow-db** | Postgres 16, plan `0.1c-256mb`, Oregon | `dpg-da91r39srm7s73attatg-a` | After Alembic `0001` on boot: extensions `plpgsql`, `vector`, `cube`, `earthdistance`. No separate dashboard SQL unless they are missing. |
+
+**Leftover (not this Blueprint):** static site **CareFlow** (`srv-da91buqjnfac73ccfisg`) at [`https://careflow-sei7.onrender.com`](https://careflow-sei7.onrender.com). Still running. Humans suspend it after careflow-web is live; **agents must not delete it.**
+
+Render MCP **cannot** create Docker web services. Further API changes: git push to **`dev`** (after CI checks) or parent `trigger_deploy` on namespace `user-render`. Pass `workspaceId` `tea-da90etlg1s2s738q8l9g` on each MCP call. Do **not** `/add-plugin render` or add a second `render` block to project `.cursor/mcp.json`.
+
+### Remaining human steps (not agent work)
+
+1. Dashboard → **careflow-api** → Environment: paste `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (`sync: false`) if not already set. Never into chat. This is the remaining auth gate for `GET /me` if secrets were missing.
+2. Firebase Auth [authorized domains](https://console.firebase.google.com/project/careflow-kenya/authentication/settings) on project **`careflow-kenya`**: add `careflow-web.onrender.com` (and `careflow-sei7.onrender.com` only if that static site stays). Do **not** create a second Firebase project.
+3. After careflow-web is live, **suspend** leftover static site CareFlow. Agents must not delete it.
+4. If the first web deploy baked an empty `NEXT_PUBLIC_API_URL`, rebuild/redeploy **careflow-web** after the API URL exists.
+
+### CI/CD
+
+Push or merge to **`dev`** → GitHub Actions **`CI / test`** and **`CI / lint`** → Render `autoDeployTrigger: checksPass`. Not a GitHub Actions deploy job. Not production on `main`. `DEMO_NOTIFY=1`. Those GitHub checks **must exist on `dev`** or `checksPass` will not deploy.
+
+`careflow-web` builds from the repository root via [`./build.sh`](build.sh) (`npm ci` + `next build` in `frontend/`). Start is `cd frontend && npm run start`. `NEXT_PUBLIC_API_URL` is build-time (from `careflow-api` `RENDER_EXTERNAL_URL`).
+
+### Dashboard secrets (`sync: false`)
+
+Paste in the Render dashboard on **careflow-api** if missing. Names only — no values in this repo or chat.
+
+**Required for `GET /me`:**
+
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_CLIENT_EMAIL`
+- `FIREBASE_PRIVATE_KEY`
+
+**Leave empty this pass:**
+
+- `AFRICAS_TALKING_*`
+- `ELEVENLABS_API_KEY`
+- `TWILIO_*`
+- `PAWA_AI_API_KEY`
+
+**Blueprint-wired (do not paste):** `DATABASE_URL` and `DATABASE_ADMIN_URL` both from `careflow-db` `connectionString` (staging shortcut — same owner string for both; dual `careflow` / `careflow_owner` + RLS is out of scope). `FRONTEND_ORIGIN` from `careflow-web` `RENDER_EXTERNAL_URL`. `NEXT_PUBLIC_API_URL` from `careflow-api` `RENDER_EXTERNAL_URL`.
+
 ## Directory map
 
 | Directory | README | Topics |
@@ -118,20 +166,29 @@ Once `api` is up, Swagger UI is at [http://localhost:8000/docs](http://localhost
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
 | `research/` | [research/README.md](research/README.md) | Market (`big-picture/`) and ops research |
 | `scripts/` | [scripts/README.md](scripts/README.md) | PDF generation and other root scripts |
+| `mosescodes/` | [mosescodes/README.md](mosescodes/README.md) | P2 working notes (Moses): facilities, KMHFR, symptoms, bookings |
 
 Add a row when you create a new top-level directory. Keep command details in linked READMEs — do not duplicate them here.
+
+## PR auto-review (Alex)
+
+Same-repo PRs targeting `dev` or `main` are reviewed by a Cursor Cloud Agent (Grok 4.6, Alex senior bar). GitHub squash-auto-merges only after that approval **and** CI jobs `test` and `lint` are green.
+
+Create or edit the Cloud Agent in the **Agents Window** (`/automate`) using [docs/agent-sops/alex-pr-review-automation.md](docs/agent-sops/alex-pr-review-automation.md). This IDE chat cannot save Automations.
 
 ## Cursor plugins and MCP
 
 Agent tooling for deploy, Firebase, and voice. No API keys in `mcp.json`. These MCPs can create, change, or delete cloud resources — only grant access you are comfortable with.
 
-**Render (plugin, user scope — all projects):**
+**Render (user-scope hosted MCP — all projects):**
 
-1. In Cursor chat, run `/add-plugin render`.
-2. Choose **user** scope, then **Authenticate** in the browser.
-3. Verify: ask the agent to run `list_workspaces`.
+This machine uses the hosted MCP fallback (not the marketplace plugin):
 
-Do **not** add a `render` entry to `.cursor/mcp.json` or `~/.cursor/mcp.json` — the plugin already provides the hosted MCP (`https://mcp.render.com/mcp`). If the plugin UI fails, add that URL in Customize → MCP with OAuth client id `cursor` instead.
+1. `~/.cursor/mcp.json` lists `render` at `https://mcp.render.com/mcp` with `auth.CLIENT_ID` `cursor`.
+2. Authenticate once in the browser (agent calls `mcp_auth` on namespace `user-render`).
+3. Verify: `list_workspaces`. Parent-only — subagents do not get this MCP.
+
+Do **not** add a second `render` entry to project [`.cursor/mcp.json`](.cursor/mcp.json). Do **not** also run `/add-plugin render` while the user `mcp.json` entry exists (duplicate servers). On a new machine, either keep this hosted-MCP pattern **or** use `/add-plugin render` (user scope) — pick one.
 
 **Firebase (Cursor plugin MCP):** Auth project `careflow-kenya`. The Firebase plugin provides MCP (`firebase_login`, project/app tools). Do **not** add a second `firebase` block to `.cursor/mcp.json`. Local Admin SDK walkthrough: [Firebase (localhost)](#firebase-localhost).
 
@@ -179,7 +236,7 @@ phantom add VAR_NAME
 
 ## Related
 
-- [README.md](README.md) — production-oriented overview
+- [README.md](README.md) — production-oriented overview (local default; staging via Render)
 - [ARCHITECTURE.md](ARCHITECTURE.md) — system topology (target vs as-built)
 - [AGENTS.md](AGENTS.md) — agent baseline
 - [docs/directory-readme-practice.md](docs/directory-readme-practice.md) — README conventions

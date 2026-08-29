@@ -2,7 +2,7 @@
 
 Kenya hospital pretriage: map symptoms to the right KEPH level, recommend the nearest facility with the shortest hospital-reported wait, and book — with SMS and voice reminders.
 
-This monorepo holds the locked product spec, research, agent scaffolding, and the FastAPI + Next.js PWA trees. The API and PWA run **locally via Docker Compose**; this is **not** a deployed production service.
+This monorepo holds the locked product spec, research, agent scaffolding, and the FastAPI + Next.js PWA trees. **Local development** uses Docker Compose (the default). This is **not** a production service. **Staging** is live on Render from the `dev` branch ([ONBOARDING.md](ONBOARDING.md#staging-render)).
 
 **GitHub:** [github.com/exabyteso/CareFlow](https://github.com/exabyteso/CareFlow)
 
@@ -17,6 +17,7 @@ This monorepo holds the locked product spec, research, agent scaffolding, and th
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
 | `research/` | [research/README.md](research/README.md) | Market (`big-picture/`) and ops research |
 | `scripts/` | [scripts/README.md](scripts/README.md) | PDF generation and other root scripts |
+| `mosescodes/` | [mosescodes/README.md](mosescodes/README.md) | P2 working notes (Moses): facilities, KMHFR, symptoms, bookings |
 
 **Local development:** [ONBOARDING.md](ONBOARDING.md)  
 **Agents and coding tools:** [AGENTS.md](AGENTS.md)  

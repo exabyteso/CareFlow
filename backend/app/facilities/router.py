@@ -1,7 +1,6 @@
-"""GET /facilities/recommend — routine ranking only (FR-PL-03 / INV-06 / INV-08).
+"""GET /facilities/recommend — routine (J7) and red-flag (J2) ranking.
 
-Auth is optional: this router stays open. Red-flag ranking (distance-only, KEPH 4+)
-is P2 and is not implemented here.
+Auth is optional: this router stays open.
 
 wait_count in the response is a desk-typed demo ranking input (INV-16, X-08).
 It is not a live HMIS feed and is not queue position.
@@ -18,18 +17,30 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.errors import ErrorEnvelope
+from app.facilities.ranking import keph_floor
 from app.facilities.seed import ensure_nairobi_seed, in_kenya_bbox
 
 router = APIRouter(prefix="/facilities", tags=["facilities"])
 
-_RECOMMEND_SQL = text(
-    """
+_SELECT = """
     SELECT id, kmhfr_code, name, keph_level, lat, lng, county, wait_count,
            earth_distance(ll_to_earth(lat, lng), ll_to_earth(:lat, :lng)) AS distance_m
     FROM facilities
-    WHERE operational AND keph_level >= :keph_min
+    WHERE operational AND keph_level >= :keph_floor
+"""
+
+_RECOMMEND_SQL_ROUTINE = text(
+    _SELECT
+    + """
     ORDER BY wait_count ASC,
              earth_distance(ll_to_earth(lat, lng), ll_to_earth(:lat, :lng)) ASC
+    """
+)
+
+_RECOMMEND_SQL_RED_FLAG = text(
+    _SELECT
+    + """
+    ORDER BY earth_distance(ll_to_earth(lat, lng), ll_to_earth(:lat, :lng)) ASC
     """
 )
 
@@ -76,11 +87,11 @@ _VALIDATION_ERROR_EXAMPLE = {
     "/recommend",
     response_model=FacilityRecommendResponse,
     operation_id="recommendFacilities",
-    summary="Rank facilities for routine (J7) pretriage",
+    summary="Rank facilities for routine (J7) or red-flag (J2) pretriage",
     description=(
-        "Returns operational facilities at or above a KEPH floor, ranked by "
-        "desk wait_count then distance, for a point inside Kenya. This is J7 "
-        "routine ranking only; it is not red-flag (distance-only, KEPH 4+) ranking."
+        "Returns operational facilities at or above a KEPH floor for a point "
+        "inside Kenya. Routine ranking is desk wait_count then distance. "
+        "When red_flag is true, wait is ignored and the floor is at least KEPH 4."
     ),
     responses={
         400: {
@@ -132,6 +143,19 @@ def recommend_facilities(
             },
         ),
     ] = 2,
+    red_flag: Annotated[
+        bool,
+        Query(
+            description=(
+                "When true, ignore wait_count and require KEPH 4 or above "
+                "(or keph_min if higher). J2."
+            ),
+            openapi_examples={
+                "routine": {"summary": "Routine", "value": False},
+                "red_flag": {"summary": "Red flag", "value": True},
+            },
+        ),
+    ] = False,
     session: Session = Depends(get_db),
 ) -> FacilityRecommendResponse:
     if not in_kenya_bbox(lat, lng):
@@ -145,9 +169,11 @@ def recommend_facilities(
 
     ensure_nairobi_seed(session)
 
+    floor = keph_floor(red_flag=red_flag, keph_min=keph_min)
+    sql = _RECOMMEND_SQL_RED_FLAG if red_flag else _RECOMMEND_SQL_ROUTINE
     result = session.execute(
-        _RECOMMEND_SQL,
-        {"lat": lat, "lng": lng, "keph_min": keph_min},
+        sql,
+        {"lat": lat, "lng": lng, "keph_floor": floor},
     )
     items = [
         FacilityRecommendItem(

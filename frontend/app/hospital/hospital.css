@@ -1,0 +1,11 @@
+.cf-hospital {
+  min-height: 100dvh;
+  background: #f5f8fb;
+  color: #16212c;
+}
+
+.cf-hospital input,
+.cf-hospital textarea,
+.cf-hospital select {
+  color: #16212c;
+}

@@ -1,17 +1,15 @@
-# CareFlow CI — Postgres via compose, Alembic, pytest.
+# CareFlow CI — Postgres via compose, Alembic, pytest under backend/tests/;
+# frontend eslint in the lint job.
 # Never set live Africa’s Talking / Twilio / ElevenLabs / Pawa keys.
 # Never curl those vendors. DEMO_NOTIFY=1 (INV-21, S-34): no live-dial/SMS.
-#
-# Wave 3 lands pytest files. Until then this job is expected to fail at
-# `pytest` if no tests exist yet.
 
 name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   contents: read
@@ -64,3 +62,26 @@ jobs:
           DEMO_NOTIFY: "1"
           DATABASE_URL: postgresql://careflow:careflow@localhost:5432/careflow
         run: pytest
+
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend deps
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint

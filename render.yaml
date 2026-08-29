@@ -1,41 +1,47 @@
-# CareFlow Render blueprint (IaC only). Do not apply from this pass.
+# CareFlow Render Blueprint — apply-ready for staging.
 # NFR-AVAIL-01 is unspecified — this file does not claim production uptime.
 #
 # Values come from the Render dashboard / secret store (sync: false).
 # Do not put secret values in this file.
 #
-# Product Postgres uses two roles (compose local-dev analogue):
-#   DATABASE_URL        app role (careflow) — request traffic, no BYPASSRLS
-#   DATABASE_ADMIN_URL  owner (careflow_owner) — Alembic
-# Render's default connectionString is a single user. After attach, create
-# those roles and paste URLs in the dashboard. Enable extensions vector,
-# cube, and earthdistance (compose init does this locally; dashboard SQL
-# on Render). pgvector is required (D-001).
+# Staging DB shortcut: Render's single connectionString is wired to BOTH
+# DATABASE_URL and DATABASE_ADMIN_URL (Alembic + app run as the Render DB
+# owner). Dual careflow / careflow_owner roles + RLS isolation stay a
+# follow-up — do not invent CREATE ROLE here.
 #
-# Container listens on 8000 (backend/Dockerfile). Health: GET /health.
+# After attach, enable extensions vector (pgvector), cube, and earthdistance
+# on the instance (compose init does this locally; dashboard SQL on Render).
+# pgvector is required (D-001).
+#
+# API container listens on $PORT (default 8000 locally). Health: GET /health.
 
 services:
   - type: web
     name: careflow-api
     runtime: docker
+    plan: starter  # legacy alias for 0.5c-512mb; paid Starter required for Docker
+    branch: dev
+    autoDeployTrigger: checksPass
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     healthCheckPath: /health
     envVars:
-      - key: PORT
-        value: "8000"
+      # Same Render connectionString for both — staging shortcut (see header).
       - key: DATABASE_URL
         fromDatabase:
           name: careflow-db
           property: connectionString
       - key: DATABASE_ADMIN_URL
-        sync: false
+        fromDatabase:
+          name: careflow-db
+          property: connectionString
       - key: FRONTEND_ORIGIN
-        sync: false
-      - key: NEXT_PUBLIC_API_URL
-        sync: false
+        fromService:
+          name: careflow-web
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
       - key: DEMO_NOTIFY
-        sync: false
+        value: "1"
       - key: FIREBASE_PROJECT_ID
         sync: false
       - key: FIREBASE_CLIENT_EMAIL
@@ -55,9 +61,35 @@ services:
       - key: PAWA_AI_API_KEY
         sync: false
 
+  - type: web
+    name: careflow-web
+    runtime: node
+    plan: starter
+    branch: dev
+    autoDeployTrigger: checksPass
+    # Repo root so ./build.sh is in the build context (files outside rootDir
+    # are unavailable). buildFilter restores frontend-only autodeploys.
+    buildCommand: ./build.sh
+    startCommand: cd frontend && npm run start  # PORT from frontend/package.json: next start --port ${PORT:-3000}
+    healthCheckPath: /
+    buildFilter:
+      paths:
+        - frontend/**
+        - build.sh
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # NEXT_PUBLIC_* is build-time — first web deploy may need a rebuild
+      # after the API hostname exists.
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          name: careflow-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+
 databases:
   - name: careflow-db
     databaseName: careflow
     postgresMajorVersion: "16"
-    # Attach in dashboard if this Blueprint is not applied.
-    # Enable pgvector (vector) + cube + earthdistance on the instance.
+    # Omit plan — default / free trial is accepted.
+    # After attach, enable vector, cube, and earthdistance on the instance.

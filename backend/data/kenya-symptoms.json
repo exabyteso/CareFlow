@@ -1,0 +1,701 @@
+[
+  {
+    "slug": "chest-pain",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "chest pain"},
+      {"lang": "en", "phrase": "pain in the chest"},
+      {"lang": "sw", "phrase": "maumivu ya kifua"},
+      {"lang": "sw", "phrase": "kifua kinauma"},
+      {"lang": "ki", "phrase": "ūrūmī wa gīthūrī"}
+    ]
+  },
+  {
+    "slug": "difficulty-breathing",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "difficulty breathing"},
+      {"lang": "en", "phrase": "shortness of breath"},
+      {"lang": "en", "phrase": "cannot breathe"},
+      {"lang": "sw", "phrase": "shida ya kupumua"},
+      {"lang": "sw", "phrase": "sipumui vizuri"},
+      {"lang": "luo", "phrase": "yweyo tek"}
+    ]
+  },
+  {
+    "slug": "stroke-signs",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "stroke signs"},
+      {"lang": "en", "phrase": "face drooping"},
+      {"lang": "en", "phrase": "sudden weakness on one side"},
+      {"lang": "en", "phrase": "cannot speak suddenly"},
+      {"lang": "sw", "phrase": "dalili za stroke"},
+      {"lang": "sw", "phrase": "uso umeleguka ghafla"},
+      {"lang": "sw", "phrase": "upande mmoja umeleguka"}
+    ]
+  },
+  {
+    "slug": "severe-bleeding",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "severe bleeding"},
+      {"lang": "en", "phrase": "bleeding a lot"},
+      {"lang": "en", "phrase": "will not stop bleeding"},
+      {"lang": "sw", "phrase": "kutoka damu nyingi"},
+      {"lang": "sw", "phrase": "damu haikomi"}
+    ]
+  },
+  {
+    "slug": "seizure",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "seizure"},
+      {"lang": "en", "phrase": "convulsion"},
+      {"lang": "en", "phrase": "fitting"},
+      {"lang": "sw", "phrase": "degedege"},
+      {"lang": "sw", "phrase": "kukakamaa"}
+    ]
+  },
+  {
+    "slug": "loss-of-consciousness",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "unconscious"},
+      {"lang": "en", "phrase": "passed out"},
+      {"lang": "en", "phrase": "not waking up"},
+      {"lang": "sw", "phrase": "amezimia"},
+      {"lang": "sw", "phrase": "hajapata fahamu"}
+    ]
+  },
+  {
+    "slug": "anaphylaxis",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "severe allergic reaction"},
+      {"lang": "en", "phrase": "throat swelling after sting"},
+      {"lang": "sw", "phrase": "mzio mkali"},
+      {"lang": "sw", "phrase": "koo limevimba baada ya kuumwa"}
+    ]
+  },
+  {
+    "slug": "poisoning",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "poisoning"},
+      {"lang": "en", "phrase": "swallowed poison"},
+      {"lang": "en", "phrase": "drank paraffin"},
+      {"lang": "sw", "phrase": "sumu"},
+      {"lang": "sw", "phrase": "amemewa sumu"},
+      {"lang": "sw", "phrase": "amenywa paraffin"}
+    ]
+  },
+  {
+    "slug": "severe-burns",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "severe burns"},
+      {"lang": "en", "phrase": "burned badly"},
+      {"lang": "sw", "phrase": "ungua kali"},
+      {"lang": "sw", "phrase": "ameungua sana"}
+    ]
+  },
+  {
+    "slug": "major-trauma",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "major trauma"},
+      {"lang": "en", "phrase": "road accident injury"},
+      {"lang": "en", "phrase": "hit by a vehicle"},
+      {"lang": "sw", "phrase": "ajali mbaya"},
+      {"lang": "sw", "phrase": "amegongwa na gari"}
+    ]
+  },
+  {
+    "slug": "severe-head-injury",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "severe head injury"},
+      {"lang": "en", "phrase": "hit the head hard"},
+      {"lang": "sw", "phrase": "jeraha kubwa kichwani"},
+      {"lang": "sw", "phrase": "amepiga kichwa sana"}
+    ]
+  },
+  {
+    "slug": "pregnancy-heavy-bleeding",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "heavy bleeding in pregnancy"},
+      {"lang": "en", "phrase": "pregnant and bleeding"},
+      {"lang": "sw", "phrase": "kutoka damu nyingi ukiwa mjamzito"},
+      {"lang": "sw", "phrase": "mjamzito anatoka damu"}
+    ]
+  },
+  {
+    "slug": "labour-started",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "labour has started"},
+      {"lang": "en", "phrase": "contractions"},
+      {"lang": "en", "phrase": "water broke"},
+      {"lang": "sw", "phrase": "uchungu umeanza"},
+      {"lang": "sw", "phrase": "maji yametoka"}
+    ]
+  },
+  {
+    "slug": "newborn-not-breathing",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "newborn not breathing"},
+      {"lang": "en", "phrase": "baby not crying after birth"},
+      {"lang": "sw", "phrase": "mtoto mchanga hapumui"},
+      {"lang": "sw", "phrase": "mtoto halia baada ya kuzaliwa"}
+    ]
+  },
+  {
+    "slug": "stiff-neck-high-fever",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "stiff neck with high fever"},
+      {"lang": "en", "phrase": "cannot bend the neck"},
+      {"lang": "sw", "phrase": "shingo ngumu na homa kali"},
+      {"lang": "sw", "phrase": "hawezi kuinama shingo"}
+    ]
+  },
+  {
+    "slug": "snake-bite",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "snake bite"},
+      {"lang": "en", "phrase": "bitten by a snake"},
+      {"lang": "sw", "phrase": "kuumwa na nyoka"},
+      {"lang": "sw", "phrase": "nyoka amemwuma"}
+    ]
+  },
+  {
+    "slug": "severe-dehydration",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "severe dehydration"},
+      {"lang": "en", "phrase": "sunken eyes and no urine"},
+      {"lang": "sw", "phrase": "ukosefu mkubwa wa maji mwilini"},
+      {"lang": "sw", "phrase": "macho yamezama"}
+    ]
+  },
+  {
+    "slug": "suspected-fracture",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "broken bone"},
+      {"lang": "en", "phrase": "suspected fracture"},
+      {"lang": "en", "phrase": "bone sticking out"},
+      {"lang": "sw", "phrase": "mfupa umevunjika"},
+      {"lang": "sw", "phrase": "mfupa umetoka nje"}
+    ]
+  },
+  {
+    "slug": "severe-abdominal-pain",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "severe abdominal pain"},
+      {"lang": "en", "phrase": "severe stomach pain"},
+      {"lang": "sw", "phrase": "maumivu makali ya tumbo"}
+    ]
+  },
+  {
+    "slug": "asthma-attack",
+    "keph_min": 4,
+    "red_flag": true,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "asthma attack"},
+      {"lang": "en", "phrase": "cannot stop wheezing"},
+      {"lang": "sw", "phrase": "shambulio la pumu"},
+      {"lang": "sw", "phrase": "pumu imezidi"}
+    ]
+  },
+  {
+    "slug": "fever",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "fever"},
+      {"lang": "en", "phrase": "high temperature"},
+      {"lang": "en", "phrase": "feeling hot"},
+      {"lang": "sw", "phrase": "homa"},
+      {"lang": "sw", "phrase": "mwili una joto"},
+      {"lang": "ki", "phrase": "gĩthũkũ"},
+      {"lang": "luo", "phrase": "midhusi"},
+      {"lang": "kln", "phrase": "misten"},
+      {"lang": "kam", "phrase": "ũwau"}
+    ]
+  },
+  {
+    "slug": "child-fever",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "child has fever"},
+      {"lang": "en", "phrase": "baby is hot"},
+      {"lang": "sw", "phrase": "mtoto ana homa"},
+      {"lang": "sw", "phrase": "mtoto ana joto"}
+    ]
+  },
+  {
+    "slug": "cough",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "cough"},
+      {"lang": "en", "phrase": "coughing"},
+      {"lang": "sw", "phrase": "kikohozi"},
+      {"lang": "sw", "phrase": "anakohoa"},
+      {"lang": "kam", "phrase": "kukosa"}
+    ]
+  },
+  {
+    "slug": "cough-two-weeks",
+    "keph_min": 3,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "cough for two weeks"},
+      {"lang": "en", "phrase": "cough lasting weeks"},
+      {"lang": "sw", "phrase": "kikohozi kwa wiki mbili"},
+      {"lang": "sw", "phrase": "kikohozi kisichoisha"}
+    ]
+  },
+  {
+    "slug": "cold-or-flu",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "cold"},
+      {"lang": "en", "phrase": "flu"},
+      {"lang": "en", "phrase": "runny nose"},
+      {"lang": "sw", "phrase": "mafua"},
+      {"lang": "sw", "phrase": "kamasi"}
+    ]
+  },
+  {
+    "slug": "headache",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "headache"},
+      {"lang": "en", "phrase": "head pain"},
+      {"lang": "sw", "phrase": "maumivu ya kichwa"},
+      {"lang": "sw", "phrase": "kichwa kinauma"}
+    ]
+  },
+  {
+    "slug": "diarrhoea",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "diarrhoea"},
+      {"lang": "en", "phrase": "diarrhea"},
+      {"lang": "en", "phrase": "loose stool"},
+      {"lang": "sw", "phrase": "kuhara"},
+      {"lang": "sw", "phrase": "tumbo linachuruza"},
+      {"lang": "luo", "phrase": "diep"}
+    ]
+  },
+  {
+    "slug": "vomiting",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "vomiting"},
+      {"lang": "en", "phrase": "throwing up"},
+      {"lang": "sw", "phrase": "kutapika"},
+      {"lang": "sw", "phrase": "anatapika"}
+    ]
+  },
+  {
+    "slug": "malaria-like-fever",
+    "keph_min": 3,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "malaria-like fever"},
+      {"lang": "en", "phrase": "fever and chills"},
+      {"lang": "en", "phrase": "shivering with fever"},
+      {"lang": "sw", "phrase": "homa ya malaria"},
+      {"lang": "sw", "phrase": "homa na baridi"}
+    ]
+  },
+  {
+    "slug": "skin-rash",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "skin rash"},
+      {"lang": "en", "phrase": "itchy spots"},
+      {"lang": "sw", "phrase": "upele"},
+      {"lang": "sw", "phrase": "mwili una waa"}
+    ]
+  },
+  {
+    "slug": "measles-like-rash",
+    "keph_min": 3,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "measles-like rash"},
+      {"lang": "en", "phrase": "rash with red eyes and cough"},
+      {"lang": "sw", "phrase": "upele kama surua"},
+      {"lang": "sw", "phrase": "surua"}
+    ]
+  },
+  {
+    "slug": "minor-wound",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "cut"},
+      {"lang": "en", "phrase": "small wound"},
+      {"lang": "sw", "phrase": "kidonda kidogo"},
+      {"lang": "sw", "phrase": "amejikata"}
+    ]
+  },
+  {
+    "slug": "back-pain",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "back pain"},
+      {"lang": "en", "phrase": "lower back pain"},
+      {"lang": "sw", "phrase": "maumivu ya mgongo"},
+      {"lang": "sw", "phrase": "mgongo unauma"}
+    ]
+  },
+  {
+    "slug": "joint-pain",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "joint pain"},
+      {"lang": "en", "phrase": "painful knees"},
+      {"lang": "sw", "phrase": "maumivu ya viungo"},
+      {"lang": "sw", "phrase": "magoti yanauma"}
+    ]
+  },
+  {
+    "slug": "burning-urine",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "burning urine"},
+      {"lang": "en", "phrase": "pain when peeing"},
+      {"lang": "sw", "phrase": "maumivu wakati wa kukojoa"},
+      {"lang": "sw", "phrase": "mkojo unauma"}
+    ]
+  },
+  {
+    "slug": "red-eye",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "red eye"},
+      {"lang": "en", "phrase": "eye discharge"},
+      {"lang": "sw", "phrase": "jicho jekundu"},
+      {"lang": "sw", "phrase": "jicho linatoka usaha"}
+    ]
+  },
+  {
+    "slug": "ear-pain",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "ear pain"},
+      {"lang": "en", "phrase": "earache"},
+      {"lang": "sw", "phrase": "maumivu ya sikio"},
+      {"lang": "sw", "phrase": "sikio linauma"}
+    ]
+  },
+  {
+    "slug": "toothache",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "toothache"},
+      {"lang": "en", "phrase": "tooth pain"},
+      {"lang": "sw", "phrase": "maumivu ya jino"},
+      {"lang": "sw", "phrase": "jino linauma"}
+    ]
+  },
+  {
+    "slug": "sore-throat",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "sore throat"},
+      {"lang": "en", "phrase": "painful throat"},
+      {"lang": "sw", "phrase": "koo linauma"},
+      {"lang": "sw", "phrase": "maumivu ya koo"}
+    ]
+  },
+  {
+    "slug": "mild-asthma",
+    "keph_min": 3,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "mild asthma"},
+      {"lang": "en", "phrase": "wheezing a little"},
+      {"lang": "sw", "phrase": "pumu kidogo"},
+      {"lang": "sw", "phrase": "kifua kinavuma kidogo"}
+    ]
+  },
+  {
+    "slug": "dog-bite",
+    "keph_min": 3,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "dog bite"},
+      {"lang": "en", "phrase": "bitten by a dog"},
+      {"lang": "sw", "phrase": "kuumwa na mbwa"},
+      {"lang": "sw", "phrase": "mbwa amemwuma"}
+    ]
+  },
+  {
+    "slug": "sprain",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "sprain"},
+      {"lang": "en", "phrase": "twisted ankle"},
+      {"lang": "sw", "phrase": "kuteguka"},
+      {"lang": "sw", "phrase": "kifundo kimeteguka"}
+    ]
+  },
+  {
+    "slug": "nosebleed",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "nosebleed"},
+      {"lang": "en", "phrase": "bleeding from the nose"},
+      {"lang": "sw", "phrase": "kutoka damu puani"},
+      {"lang": "sw", "phrase": "pua inatoka damu"}
+    ]
+  },
+  {
+    "slug": "constipation",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "constipation"},
+      {"lang": "en", "phrase": "cannot pass stool"},
+      {"lang": "sw", "phrase": "kuvimbiwa"},
+      {"lang": "sw", "phrase": "hawezi kunya"}
+    ]
+  },
+  {
+    "slug": "heartburn",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "heartburn"},
+      {"lang": "en", "phrase": "acid in the chest"},
+      {"lang": "sw", "phrase": "kiungulia"},
+      {"lang": "sw", "phrase": "kifua kinaungua"}
+    ]
+  },
+  {
+    "slug": "dizziness",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "dizziness"},
+      {"lang": "en", "phrase": "feeling faint"},
+      {"lang": "sw", "phrase": "kizunguzungu"},
+      {"lang": "sw", "phrase": "kichwa kinazunguka"}
+    ]
+  },
+  {
+    "slug": "pregnancy-nausea",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "nausea in pregnancy"},
+      {"lang": "en", "phrase": "morning sickness"},
+      {"lang": "sw", "phrase": "kichefuchefu cha mimba"},
+      {"lang": "sw", "phrase": "mimba inasumbua tumbo"}
+    ]
+  },
+  {
+    "slug": "sti-symptoms",
+    "keph_min": 3,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "discharge from private parts"},
+      {"lang": "en", "phrase": "itching down there"},
+      {"lang": "sw", "phrase": "usaha sehemu za siri"},
+      {"lang": "sw", "phrase": "mwasho sehemu za siri"}
+    ]
+  },
+  {
+    "slug": "worms",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "worms"},
+      {"lang": "en", "phrase": "intestinal worms"},
+      {"lang": "sw", "phrase": "minyoo"},
+      {"lang": "sw", "phrase": "ana minyoo"}
+    ]
+  },
+  {
+    "slug": "mild-dehydration",
+    "keph_min": 3,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "mild dehydration"},
+      {"lang": "en", "phrase": "thirsty after diarrhoea"},
+      {"lang": "sw", "phrase": "ukosefu mdogo wa maji mwilini"},
+      {"lang": "sw", "phrase": "ana kiu baada ya kuhara"}
+    ]
+  },
+  {
+    "slug": "allergies-itchy-eyes",
+    "keph_min": 2,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "itchy watery eyes"},
+      {"lang": "en", "phrase": "hay fever"},
+      {"lang": "sw", "phrase": "macho yanawasha"},
+      {"lang": "sw", "phrase": "macho yanatoka maji"}
+    ]
+  },
+  {
+    "slug": "swollen-legs",
+    "keph_min": 3,
+    "red_flag": false,
+    "icd11_uri": null,
+    "ciel_concept_id": null,
+    "synonyms": [
+      {"lang": "en", "phrase": "swollen legs"},
+      {"lang": "en", "phrase": "swelling of the feet"},
+      {"lang": "sw", "phrase": "miguu imevimba"},
+      {"lang": "sw", "phrase": "miguu imejaa maji"}
+    ]
+  }
+]
