@@ -43,6 +43,8 @@ export type QueueBooking = {
   code: string;
   status: BookingStatus;
   booking_kind: BookingKind;
+  /** ISO datetime for appointments; null for walk-in. */
+  slot_start: string | null;
   queue_position: number | null;
   created_at: string;
   given_name: string | null;
@@ -307,6 +309,7 @@ function seedBookings(): QueueBooking[] {
       code: `CF-${String(id).padStart(3, "0")}`,
       status: "booked" as const,
       booking_kind: "instant" as const,
+      slot_start: null,
       queue_position: null,
       created_at: hoursAgo(row.hours_ago),
       desk_queued_at: hoursAgo(row.hours_ago),
@@ -328,6 +331,7 @@ function seedBookings(): QueueBooking[] {
       code: "CF-091",
       status: "arrived",
       booking_kind: "instant",
+      slot_start: null,
       queue_position: null,
       created_at: hoursAgo(4),
       desk_queued_at: hoursAgo(4),
@@ -345,6 +349,7 @@ function seedBookings(): QueueBooking[] {
       code: "CF-092",
       status: "no_show",
       booking_kind: "instant",
+      slot_start: null,
       queue_position: null,
       created_at: hoursAgo(5),
       desk_queued_at: hoursAgo(5),
@@ -388,6 +393,7 @@ function seedState(): StoreState {
 function normalizeBooking(row: QueueBooking): QueueBooking {
   return {
     ...row,
+    slot_start: row.slot_start ?? null,
     department_id: row.department_id ?? null,
     desk_queued_at: row.desk_queued_at ?? row.created_at,
     symptom_slugs: [...row.symptom_slugs],
@@ -535,20 +541,80 @@ export function getFacility(facilityId: number): FacilityRecord | null {
   return row ? { ...row } : null;
 }
 
+export function ensureFacility(input: {
+  id: number;
+  kmhfr_code: string;
+  name: string;
+  keph_level: number;
+  lat: number;
+  lng: number;
+  county: string;
+  wait_count?: number;
+}): FacilityRecord {
+  const state = getState();
+  const byCode = state.facilities.find(
+    (row) => row.kmhfr_code === input.kmhfr_code,
+  );
+  if (byCode) {
+    return { ...byCode };
+  }
+  const byId = state.facilities.find((row) => row.id === input.id);
+  if (byId) {
+    return { ...byId };
+  }
+  const used = new Set(state.facilities.map((row) => row.id));
+  let id = input.id;
+  if (used.has(id)) {
+    id = Math.max(...used) + 1;
+  }
+  const record: FacilityRecord = {
+    id,
+    kmhfr_code: input.kmhfr_code,
+    name: input.name,
+    keph_level: input.keph_level,
+    lat: input.lat,
+    lng: input.lng,
+    county: input.county,
+    wait_count: input.wait_count ?? 0,
+  };
+  setState({
+    ...state,
+    facilities: [...state.facilities, record],
+  });
+  return { ...record };
+}
+
+function sortDeskBookings(rows: QueueBooking[]): QueueBooking[] {
+  return [...rows].sort((a, b) => {
+    const aOpen = a.status === "booked" ? 0 : 1;
+    const bOpen = b.status === "booked" ? 0 : 1;
+    if (aOpen !== bOpen) {
+      return aOpen - bOpen;
+    }
+    return a.created_at.localeCompare(b.created_at) || a.id - b.id;
+  });
+}
+
 export function listBookingsForFacility(facilityId: number): QueueBooking[] {
   const state = recomputePositions(getState());
   memory = state;
-  return state.bookings
-    .filter((row) => row.facility_id === facilityId)
-    .sort((a, b) => {
-      const aOpen = a.status === "booked" ? 0 : 1;
-      const bOpen = b.status === "booked" ? 0 : 1;
-      if (aOpen !== bOpen) {
-        return aOpen - bOpen;
-      }
-      return a.created_at.localeCompare(b.created_at) || a.id - b.id;
-    })
-    .map(snapshotBooking);
+  return sortDeskBookings(
+    state.bookings.filter((row) => row.facility_id === facilityId),
+  ).map(snapshotBooking);
+}
+
+/** All facilities — demo desk has one staff login and must see every care-seeker ticket. */
+export function listAllBookings(): QueueBooking[] {
+  const state = recomputePositions(getState());
+  memory = state;
+  return sortDeskBookings(state.bookings).map(snapshotBooking);
+}
+
+export function getBookingById(bookingId: number): QueueBooking | null {
+  const state = recomputePositions(getState());
+  memory = state;
+  const row = state.bookings.find((item) => item.id === bookingId);
+  return row ? snapshotBooking(row) : null;
 }
 
 export function getBookingByCode(code: string): QueueBooking | null {
@@ -740,7 +806,7 @@ export function transferBooking(
         code: booking.code,
         station_id: fromStation,
         called_at: now,
-        outcome: "transferred",
+        outcome: "transferred" as const,
       },
       ...state.called_log,
     ].slice(0, 30),
@@ -772,6 +838,7 @@ export function sortStationQueue(
   const waiting = bookings.filter(
     (row) =>
       row.status === "booked" &&
+      row.booking_kind === "instant" &&
       (departmentId == null
         ? row.department_id == null
         : row.department_id === departmentId),
@@ -801,10 +868,9 @@ export function callNextAtStation(
   const servingIds = new Set(
     Object.values(state.serving).filter((id): id is number => id != null),
   );
-  const waiting = sortStationQueue(
-    state.bookings.filter((row) => row.facility_id === facilityId),
-    departmentId,
-  ).filter((row) => !servingIds.has(row.id));
+  const waiting = sortStationQueue(state.bookings, departmentId).filter(
+    (row) => !servingIds.has(row.id),
+  );
   const next = waiting[0];
   if (!next) {
     return null;
@@ -818,7 +884,7 @@ export function callNextAtStation(
         code: next.code,
         station_id: stationId,
         called_at: new Date().toISOString(),
-        outcome: "called",
+        outcome: "called" as const,
       },
       ...state.called_log,
     ].slice(0, 30),
@@ -847,6 +913,7 @@ export function createInstantBooking(input: {
     code: `CF-${String(id).padStart(3, "0")}`,
     status: "booked",
     booking_kind: "instant",
+    slot_start: null,
     queue_position: null,
     created_at: new Date().toISOString(),
     given_name: input.given_name,
@@ -873,4 +940,110 @@ export function createInstantBooking(input: {
   setState(positioned);
   const stored = positioned.bookings.find((row) => row.id === id);
   return snapshotBooking(stored ?? booking);
+}
+
+export function createAppointmentBooking(input: {
+  facilityId: number;
+  given_name: string | null;
+  family_name: string | null;
+  phone_last4: string;
+  symptom_slugs: string[];
+  patient_free_text: string | null;
+  red_flag_applied: boolean;
+  slot_start: string;
+}): QueueBooking {
+  const state = getState();
+  const facility = state.facilities.find((row) => row.id === input.facilityId);
+  if (!facility) {
+    throw new Error("That facility is not available.");
+  }
+  const id = state.nextId;
+  const now = new Date().toISOString();
+  const booking: QueueBooking = {
+    id,
+    facility_id: input.facilityId,
+    code: `CF-${String(id).padStart(3, "0")}`,
+    status: "booked",
+    booking_kind: "appointment",
+    slot_start: input.slot_start,
+    queue_position: null,
+    created_at: now,
+    given_name: input.given_name,
+    family_name: input.family_name,
+    phone_last4: input.phone_last4,
+    symptom_slugs: [...input.symptom_slugs],
+    patient_free_text: input.patient_free_text,
+    red_flag_applied: input.red_flag_applied,
+    department_id: null,
+    desk_queued_at: now,
+  };
+  const next: StoreState = {
+    nextId: id + 1,
+    serving: state.serving,
+    called_log: state.called_log,
+    facilities: state.facilities,
+    bookings: [...state.bookings, booking],
+  };
+  const positioned = recomputePositions(next);
+  setState(positioned);
+  const stored = positioned.bookings.find((row) => row.id === id);
+  return snapshotBooking(stored ?? booking);
+}
+
+const SLOT_HOURS = [9, 10, 11, 14, 15, 16];
+const NAIROBI_OFFSET_MS = 3 * 60 * 60 * 1000;
+
+function pad2(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+function nairobiYmd(from: Date): { y: number; m: number; d: number } {
+  const shifted = new Date(from.getTime() + NAIROBI_OFFSET_MS);
+  return {
+    y: shifted.getUTCFullYear(),
+    m: shifted.getUTCMonth() + 1,
+    d: shifted.getUTCDate(),
+  };
+}
+
+function addCalendarDays(
+  ymd: { y: number; m: number; d: number },
+  days: number,
+): { y: number; m: number; d: number } {
+  const utc = new Date(Date.UTC(ymd.y, ymd.m - 1, ymd.d + days));
+  return {
+    y: utc.getUTCFullYear(),
+    m: utc.getUTCMonth() + 1,
+    d: utc.getUTCDate(),
+  };
+}
+
+function nairobiSlotIso(
+  y: number,
+  m: number,
+  d: number,
+  hour: number,
+  minute: number,
+): string {
+  return `${y}-${pad2(m)}-${pad2(d)}T${pad2(hour)}:${pad2(minute)}:00+03:00`;
+}
+
+/** Demo slots: remaining today plus tomorrow morning, Nairobi (UTC+3). */
+export function listAppointmentSlots(from: Date = new Date()): string[] {
+  const slots: string[] = [];
+  const start = nairobiYmd(from);
+  for (let day = 0; slots.length < 8 && day < 3; day += 1) {
+    const ymd = addCalendarDays(start, day);
+    for (const hour of SLOT_HOURS) {
+      const iso = nairobiSlotIso(ymd.y, ymd.m, ymd.d, hour, 0);
+      if (new Date(iso).getTime() <= from.getTime()) {
+        continue;
+      }
+      slots.push(iso);
+      if (slots.length >= 8) {
+        break;
+      }
+    }
+  }
+  return slots;
 }

@@ -39,10 +39,11 @@ services:
       DEMO_NOTIFY: "1"
       # Premade Daniel - Steady Broadcaster. Not a secret; keeps TTS from drifting.
       ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-onwK4e9ZLuTAKqWW03F9}
-      # Optional: `phantom exec -- docker compose up` so boot seed can upsert Auth.
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
-      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
-      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      # Pass-through from the process environment. PEM must be one line (\n
+      # escaped); ./scripts/compose-up-local.sh loads it from the Phantom vault.
+      FIREBASE_PROJECT_ID:
+      FIREBASE_CLIENT_EMAIL:
+      FIREBASE_PRIVATE_KEY:
     depends_on:
       db:
         condition: service_healthy

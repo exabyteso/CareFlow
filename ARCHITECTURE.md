@@ -111,8 +111,9 @@ Journeys J1–J9: [plans/user-journeys.md](plans/user-journeys.md). Target J1 se
 | `POST /symptoms/map` | Handler in `symptoms/`; **not** in `main.py` (P1 handshake) | P2 + include_router |
 | `POST /bookings`, hospital queue / wait / arrived / no-show | Create package unmounted; queue/arrived are P4 | P2 / P4 |
 | `POST /voice/stt`, `/voice/tts`, notify, notes | Not in `main.py` | P5 |
-| PWA `/` | Role picker; **no** J8 mic consent | J8 then role picker |
-| PWA `/patient`, `/hospital` | Shells (disclaimer / 999 / placeholder) | Book + desk |
+| PWA `/` | Marketing homepage; role CTAs in nav and footer; **no** consent gate | Same |
+| PWA `/patient` | J8 voice consent, then care-seeker journey (symptoms, recommend, book) | Same + full voice path |
+| PWA `/hospital` | Desk shell (this facility) | Queue + wait + arrived / no-show |
 | Firebase **client** | None | P3 |
 | `backend/app/{core,auth,facilities}` | Live | Same |
 | `symptoms`, `triage`, `bookings`, `hospital`, `notes`, `notify`, `voice` | Planned | Per [team-issues.md](plans/team-issues.md) |

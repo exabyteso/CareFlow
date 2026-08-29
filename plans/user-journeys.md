@@ -14,7 +14,7 @@ Related: [kenya-pretriage.md](kenya-pretriage.md), [product-spec.md](product-spe
 
 ## J1 — Care-seeker, routine (happy path)
 
-1. Opens the PWA (browser or installed). Completes J8 voice prompt. Chooses **I need care**. Signs in with Firebase.
+1. Opens the PWA (browser or installed). On `/`, chooses **I need care** (nav or footer). Completes J8 voice prompt on `/patient`. Signs in with Firebase (optional for guest book).
 2. Sees disclaimer: not a diagnosis; in emergency call 999 / go now.
 3. Completes structured symptom form **or speaks symptoms** (mapped to catalog). Optional extra text stored.
 4. Rules assign a **minimum KEPH level** (no red flag).
@@ -63,7 +63,7 @@ Related: [kenya-pretriage.md](kenya-pretriage.md), [product-spec.md](product-spe
 
 ## J8 — Care-seeker, voice / low vision (required)
 
-1. Lands on `/`. **Before** the role picker, the PWA **greets** (spoken Kiswahili and English, or last chosen language) and **asks if they want voice features on**. Microphone starts **only after yes** (button or “ndiyo” / “yes”).
+1. Lands on marketing `/`. Chooses **I need care** (navbar or footer). On `/patient`, **before** the care-seeker journey, the PWA **asks if they want voice features on**. Microphone starts **only after yes** (button or “ndiyo” / “yes”). Returning visitors with consent in `localStorage` skip the prompt.
 2. If yes: disclaimer, symptoms, results, and confirm-book are spoken and listen for answers. User can **say symptoms** in Kiswahili, English, Gĩkũyũ, Dholuo, Kikamba, or Kĩmĩĩrũ; STT uses ElevenLabs/Web Speech for en/sw and **Pawa** for the others (or if ElevenLabs fails). Backend maps text to catalog (`pgvector`) then rules → KEPH → nearest + lowest wait.
 3. If no: visual form remains fully usable (keyboard + screen-reader labels still required).
 4. Installed PWA must allow J1 without sighted assistance when voice is on.

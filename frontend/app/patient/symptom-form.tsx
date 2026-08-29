@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { MicIcon, SearchIcon } from "@/components/icons";
 import { t, type Locale } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 import { getVoiceConsent } from "@/lib/voice-consent";
@@ -10,6 +11,9 @@ type SymptomFormProps = {
   locale: Locale;
   value: string;
   onChange: (value: string) => void;
+  onSearch?: () => void;
+  showSearch?: boolean;
+  searching?: boolean;
 };
 
 type RecognitionLike = {
@@ -43,24 +47,14 @@ function getRecognitionConstructor(): (new () => RecognitionLike) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-function MicIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-    >
-      <rect x="9" y="3" width="6" height="11" rx="3" />
-      <path d="M6 11a6 6 0 0 0 12 0" />
-      <path d="M12 17v4" />
-    </svg>
-  );
-}
-
-export function SymptomForm({ locale, value, onChange }: SymptomFormProps) {
+export function SymptomForm({
+  locale,
+  value,
+  onChange,
+  onSearch,
+  showSearch = false,
+  searching = false,
+}: SymptomFormProps) {
   const [canSpeak, setCanSpeak] = useState(false);
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef<RecognitionLike | null>(null);
@@ -148,31 +142,42 @@ export function SymptomForm({ locale, value, onChange }: SymptomFormProps) {
         >
           {t("symptomsLabel", locale)}
         </label>
-        <textarea
-          id="patient-symptoms"
-          name="symptoms"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={t("symptomsPlaceholder", locale)}
-          className={ui.textarea}
-          rows={5}
-        />
+        <div className="flex min-h-12 items-start gap-2 rounded-2xl border border-cf-line bg-cf-card px-3 py-2 shadow-md">
+          <SearchIcon className="mt-2.5 h-5 w-5 shrink-0 text-cf-muted" />
+          <textarea
+            id="patient-symptoms"
+            name="symptoms"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={t("symptomsPlaceholder", locale)}
+            className="min-h-32 w-full resize-y border-0 bg-transparent py-2 text-base text-cf-ink placeholder:text-cf-muted focus:outline-none"
+            rows={5}
+          />
+          {canSpeak ? (
+            <button
+              type="button"
+              className="inline-flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-xl text-cf-primary hover:bg-cf-primary/10"
+              onClick={onSpeakClick}
+              aria-pressed={listening}
+              aria-label={t("symptomsSpeak", locale)}
+            >
+              <MicIcon className="h-5 w-5" />
+            </button>
+          ) : null}
+        </div>
+        {showSearch && onSearch ? (
+          <div className="mt-3">
+            <button
+              type="button"
+              className={ui.primaryBtn}
+              onClick={onSearch}
+              disabled={searching}
+            >
+              {searching ? t("loading", locale) : t("findFacilities", locale)}
+            </button>
+          </div>
+        ) : null}
       </div>
-
-      {canSpeak ? (
-        <button
-          type="button"
-          className={`mt-3 ${ui.secondaryBtn}`}
-          onClick={onSpeakClick}
-          aria-pressed={listening}
-          aria-label={t("symptomsSpeak", locale)}
-        >
-          <span className="inline-flex items-center gap-2">
-            <MicIcon />
-            {t("symptomsSpeak", locale)}
-          </span>
-        </button>
-      ) : null}
     </section>
   );
 }

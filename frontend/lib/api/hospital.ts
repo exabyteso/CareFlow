@@ -5,10 +5,12 @@
 import {
   assignBookingDepartment,
   callNextAtStation,
+  getBookingByCode,
+  getBookingById,
   getCalledLog,
   getFacility,
   getServingMap,
-  listBookingsForFacility,
+  listAllBookings,
   listDepartments,
   markBookingTerminal,
   patchFacilityWait,
@@ -55,6 +57,18 @@ const STAFF_FACILITY_ID = 1;
 
 export { subscribeQueue, listDepartments, sortStationQueue };
 
+export function listScheduledBookings(bookings: QueueBooking[]): QueueBooking[] {
+  return bookings
+    .filter(
+      (row) => row.status === "booked" && row.booking_kind === "appointment",
+    )
+    .sort((a, b) => {
+      const aSlot = a.slot_start ?? "";
+      const bSlot = b.slot_start ?? "";
+      return aSlot.localeCompare(bSlot) || a.id - b.id;
+    });
+}
+
 const SYMPTOM_LABELS: Record<string, string> = {
   fever: "Fever",
   cough: "Cough",
@@ -63,13 +77,31 @@ const SYMPTOM_LABELS: Record<string, string> = {
   malaria_suspect: "Fever and chills",
   pregnancy_check: "Pregnancy check",
   chest_pain: "Chest pain",
+  "chest-pain": "Chest pain",
   severe_bleeding: "Severe bleeding",
   trouble_breathing: "Trouble breathing",
+  "trouble-breathing": "Trouble breathing",
   stroke_signs: "Face or arm weakness, or slurred speech",
 };
 
 export function labelForSlug(slug: string): string {
   return SYMPTOM_LABELS[slug] ?? slug;
+}
+
+export function facilityName(booking: QueueBooking): string {
+  return getFacility(booking.facility_id)?.name ?? "Unknown facility";
+}
+
+function requireBooking(bookingId: number): QueueBooking {
+  const booking = getBookingById(bookingId);
+  if (!booking) {
+    throw new Error("No booking matches that id.");
+  }
+  return booking;
+}
+
+export function lookupDeskTicket(code: string): QueueBooking | null {
+  return getBookingByCode(code);
 }
 
 export async function getHospitalQueue(): Promise<HospitalQueueResponse> {
@@ -84,7 +116,7 @@ export async function getHospitalQueue(): Promise<HospitalQueueResponse> {
       kmhfr_code: facility.kmhfr_code,
       wait_count: facility.wait_count,
     },
-    bookings: listBookingsForFacility(STAFF_FACILITY_ID),
+    bookings: listAllBookings(),
     departments: listDepartments(),
     serving: getServingMap(),
     called_log: getCalledLog(),
@@ -101,20 +133,23 @@ export async function patchWaitCount(
 export async function markArrived(
   bookingId: number,
 ): Promise<BookingStatusResponse> {
-  return markBookingTerminal(bookingId, STAFF_FACILITY_ID, "arrived");
+  const booking = requireBooking(bookingId);
+  return markBookingTerminal(bookingId, booking.facility_id, "arrived");
 }
 
 export async function markNoShow(
   bookingId: number,
 ): Promise<BookingStatusResponse> {
-  return markBookingTerminal(bookingId, STAFF_FACILITY_ID, "no_show");
+  const booking = requireBooking(bookingId);
+  return markBookingTerminal(bookingId, booking.facility_id, "no_show");
 }
 
 export async function assignDepartment(
   bookingId: number,
   departmentId: number | null,
 ): Promise<QueueBooking> {
-  return assignBookingDepartment(bookingId, STAFF_FACILITY_ID, departmentId);
+  const booking = requireBooking(bookingId);
+  return assignBookingDepartment(bookingId, booking.facility_id, departmentId);
 }
 
 export async function callNext(
@@ -129,7 +164,8 @@ export async function sendOnwards(
   departmentId: number,
   stationId: string | null,
 ): Promise<{ booking: QueueBooking; placed: "queue" | "station" }> {
-  return transferBooking(bookingId, STAFF_FACILITY_ID, {
+  const booking = requireBooking(bookingId);
+  return transferBooking(bookingId, booking.facility_id, {
     departmentId,
     stationId,
   });

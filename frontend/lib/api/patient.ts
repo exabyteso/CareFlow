@@ -39,6 +39,8 @@ export type MappedSymptom = {
 
 export type MapSymptomsResult = {
   symptoms: MappedSymptom[];
+  keph_min: number | null;
+  red_flag: boolean;
   degraded: boolean;
 };
 
@@ -50,11 +52,13 @@ export async function recommendFacilities(params: {
   lat: number;
   lng: number;
   keph_min?: number;
+  red_flag?: boolean;
 }): Promise<FacilityRecommendResponse> {
   const query = new URLSearchParams({
     lat: String(params.lat),
     lng: String(params.lng),
     keph_min: String(params.keph_min ?? 2),
+    red_flag: params.red_flag ? "true" : "false",
   });
   return apiFetch<FacilityRecommendResponse>(
     `/facilities/recommend?${query.toString()}`,
@@ -76,53 +80,103 @@ function shouldDegradeMapSymptoms(err: unknown): boolean {
   return false;
 }
 
+function readMappedSymptom(item: unknown): MappedSymptom | null {
+  if (typeof item === "string") {
+    return { symptom_id: item, score: null };
+  }
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+  const row = item as Record<string, unknown>;
+  const id =
+    typeof row.symptom_id === "string"
+      ? row.symptom_id
+      : typeof row.id === "string"
+        ? row.id
+        : null;
+  if (!id) {
+    return null;
+  }
+  return {
+    symptom_id: id,
+    score: typeof row.score === "number" ? row.score : null,
+  };
+}
+
+function flagsFrom(
+  rec: Record<string, unknown>,
+  rows: unknown[],
+): { keph_min: number | null; red_flag: boolean } {
+  const topKeph = typeof rec.keph_min === "number" ? rec.keph_min : null;
+  const hasTopFlag = typeof rec.red_flag === "boolean";
+  let keph_min = topKeph;
+  let red_flag = hasTopFlag ? rec.red_flag === true : false;
+  if (topKeph == null || !hasTopFlag) {
+    for (const item of rows) {
+      if (!item || typeof item !== "object") {
+        continue;
+      }
+      const row = item as Record<string, unknown>;
+      if (topKeph == null && typeof row.keph_min === "number") {
+        keph_min =
+          keph_min == null ? row.keph_min : Math.max(keph_min, row.keph_min);
+      }
+      if (!hasTopFlag && row.red_flag === true) {
+        red_flag = true;
+      }
+    }
+  }
+  return { keph_min, red_flag };
+}
+
 function normalizeMapSymptoms(body: unknown): MapSymptomsResult {
+  const empty: MapSymptomsResult = {
+    symptoms: [],
+    keph_min: null,
+    red_flag: false,
+    degraded: false,
+  };
   if (!body || typeof body !== "object") {
-    return { symptoms: [], degraded: false };
+    return empty;
   }
   const rec = body as Record<string, unknown>;
+
+  if (Array.isArray(rec.matches)) {
+    const symptoms: MappedSymptom[] = [];
+    for (const item of rec.matches) {
+      const mapped = readMappedSymptom(item);
+      if (mapped) {
+        symptoms.push(mapped);
+      }
+    }
+    return { symptoms, ...flagsFrom(rec, rec.matches), degraded: false };
+  }
 
   if (Array.isArray(rec.symptoms)) {
     const symptoms: MappedSymptom[] = [];
     for (const item of rec.symptoms) {
-      if (typeof item === "string") {
-        symptoms.push({ symptom_id: item, score: null });
-        continue;
-      }
-      if (item && typeof item === "object") {
-        const row = item as Record<string, unknown>;
-        const id =
-          typeof row.symptom_id === "string"
-            ? row.symptom_id
-            : typeof row.id === "string"
-              ? row.id
-              : null;
-        if (id) {
-          symptoms.push({
-            symptom_id: id,
-            score: typeof row.score === "number" ? row.score : null,
-          });
-        }
+      const mapped = readMappedSymptom(item);
+      if (mapped) {
+        symptoms.push(mapped);
       }
     }
-    return { symptoms, degraded: false };
+    return { symptoms, ...flagsFrom(rec, rec.symptoms), degraded: false };
   }
 
   if (Array.isArray(rec.symptom_ids)) {
-    return {
-      symptoms: rec.symptom_ids
-        .filter((id): id is string => typeof id === "string")
-        .map((symptom_id) => ({ symptom_id, score: null })),
-      degraded: false,
-    };
+    const symptoms = rec.symptom_ids
+      .filter((id): id is string => typeof id === "string")
+      .map((symptom_id) => ({ symptom_id, score: null }));
+    return { symptoms, ...flagsFrom(rec, []), degraded: false };
   }
 
-  return { symptoms: [], degraded: false };
+  return { ...empty, ...flagsFrom(rec, []) };
 }
 
 /**
  * POST /symptoms/map. Route is not live in Wave 1.
- * On 404, network failure, or unimplemented, returns `{ symptoms: [], degraded: true }`.
+ * On 404, network failure, or unimplemented, returns
+ * `{ symptoms: [], keph_min: null, red_flag: false, degraded: true }`.
  * Does not invent a client-side diagnosis or KEPH engine.
  */
 export async function mapSymptoms(params: {
@@ -137,7 +191,7 @@ export async function mapSymptoms(params: {
     return normalizeMapSymptoms(body);
   } catch (err) {
     if (shouldDegradeMapSymptoms(err)) {
-      return { symptoms: [], degraded: true };
+      return { symptoms: [], keph_min: null, red_flag: false, degraded: true };
     }
     throw err;
   }

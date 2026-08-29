@@ -20,12 +20,12 @@ Cross-cutting behaviour for JSON routes registered on the FastAPI app in `backen
 
 ## Authentication and authorisation
 
-Firebase **ID tokens** only. There is **no public email-register / self-signup form**; Google and email/password sign-in remain. Care-seekers are provisioned on the first valid token if the UID is missing from `users`. Hospital staff remain invite-only (seeded `demo-staff` plus operator-seeded rows). Demo accounts `demo-patient` / `patient@careflow.local` (care-seeker) and `demo-staff` / `staff@careflow.local` (hospital staff) apply to **localhost and staging** ([careflow-web.onrender.com](https://careflow-web.onrender.com)), not production. Same Firebase project `careflow-kenya`; Postgres rows are per environment.
+Firebase **ID tokens** only, plus two labeled **demo Bearer** values (`careflow-demo-patient`, `careflow-demo-staff`) so PWA **Use demo login** can skip Firebase Auth. There is **no public email-register / self-signup form**; Google and email/password sign-in remain. Care-seekers are provisioned on the first valid token if the UID is missing from `users`. Hospital staff remain invite-only (seeded `demo-staff` plus operator-seeded rows). Demo accounts `demo-patient` / `patient@careflow.local` (care-seeker) and `demo-staff` / `staff@careflow.local` (hospital staff) apply to **localhost and staging** ([careflow-web.onrender.com](https://careflow-web.onrender.com)), not production. Same Firebase project `careflow-kenya`; Postgres rows are per environment.
 
 | Topic | Detail |
 |-------|--------|
-| **Credentials** | `Authorization: Bearer <Firebase ID token>` |
-| **Validation** | Firebase Admin (`app.auth.firebase.verify_id_token`). Missing/invalid token → **401** `unauthorized`. |
+| **Credentials** | `Authorization: Bearer <Firebase ID token>` or demo `careflow-demo-patient` / `careflow-demo-staff` |
+| **Validation** | Firebase Admin (`app.auth.firebase.verify_id_token`), with demo Bearers mapped before Admin is called. Missing/invalid token → **401** `unauthorized`. |
 | **Route guards** | `get_current_user` on `GET /me`. Recommend is public (optional Bearer is ignored). Health has no auth. |
 | **Provisioning** | Care-seeker: valid token whose UID is not in `users` → INSERT `role=patient`, `facility_id=NULL`, `ui_locale=en`. **404** `user_not_provisioned` only if that insert fails (not for a first-time Google user). Staff are not auto-provisioned; an unknown UID on `/hospital/*` is inserted as a patient then **403** `forbidden`. |
 | **Roles** | JSON `role` is `patient` (care-seeker) or `hospital_staff`. Hospital staff sessions carry `facility_id` (this facility only). |

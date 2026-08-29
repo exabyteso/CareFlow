@@ -12,8 +12,8 @@ Not a diagnosis. Not SHA/AfyaKE.
 
 | Path | Role |
 |------|------|
-| `/` | J8 voice-consent greeting, then role picker (care-seeker / hospital) |
-| `/patient` | Care-seeker: disclaimer, symptoms, recommend, book |
+| `/` | Marketing homepage; role CTAs in nav and footer (`/patient`, `/hospital`) |
+| `/patient` | Care-seeker: J8 voice consent, then disclaimer, symptoms, recommend, book |
 | `/hospital` | Desk + clinician: wait count, queue, mark met/no-show |
 | `/hospital/notes` | P5 — notes capture for a booking |
 
