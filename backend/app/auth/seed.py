@@ -23,6 +23,13 @@ DEMO_STAFF_KMHFR = "SEED-NBO-KNH"
 DEMO_PATIENT_EMAIL = "patient@careflow.local"
 DEMO_STAFF_EMAIL = "staff@careflow.local"
 DEMO_PASSWORD = "CareflowDemo1!"
+# PWA demo login skips Firebase; API accepts these Bearer values as the demo UIDs.
+DEMO_PATIENT_TOKEN = "careflow-demo-patient"
+DEMO_STAFF_TOKEN = "careflow-demo-staff"
+DEMO_BEARER_TOKENS = {
+    DEMO_PATIENT_TOKEN: DEMO_PATIENT_UID,
+    DEMO_STAFF_TOKEN: DEMO_STAFF_UID,
+}
 
 KE_MOBILE_E164_RE = re.compile(r"^\+254[17][0-9]{8}$")
 _RESERVED_DEMO_PHONES = frozenset({DEMO_PATIENT_PHONE, DEMO_STAFF_PHONE})

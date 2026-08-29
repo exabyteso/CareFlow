@@ -1,6 +1,6 @@
 /**
  * J8 voice-consent persistence only. Never calls getUserMedia or SpeechRecognition.
- * Microphone start belongs to the landing/patient UI after consent === "yes".
+ * Microphone start belongs to the care-seeker UI on `/patient` after consent === "yes".
  */
 export const VOICE_CONSENT_KEY = "careflow-voice-consent";
 

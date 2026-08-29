@@ -60,7 +60,8 @@ async function readJsonBody(res: Response): Promise<unknown> {
 
 /**
  * Fetch JSON from the CareFlow API. Attaches Bearer when a Firebase ID token
- * is available (optional auth; recommend is public). GET never sends a body.
+ * or demo session token is available (optional auth; recommend is public).
+ * GET never sends a body.
  */
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const method = (init?.method ?? "GET").toUpperCase();

@@ -107,7 +107,7 @@ flowchart LR
   desk --> notes
 ```
 
-One PWA: `/` (voice consent then role picker), `/patient`, `/hospital`.
+One PWA: `/` (marketing homepage, role CTAs in nav and footer), `/patient` (J8 voice consent then journey), `/hospital`.
 
 ## Feature list
 
@@ -118,7 +118,7 @@ One PWA: `/` (voice consent then role picker), `/patient`, `/hospital`.
 - Red-flag bypass → nearest KEPH 4+; do not optimise for wait.
 - Book right KEPH level, nearest, fewest waiting.
 - SMS and phone reminder (ElevenLabs call; Pawa TTS if that language or API is missing).
-- Landing: spoken greet + activate voice? (J8).
+- Care-seeker path: spoken greet + activate voice on `/patient` (J8).
 
 **Hospital (`/hospital`)**
 

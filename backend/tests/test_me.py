@@ -3,6 +3,8 @@
 import re
 import uuid
 
+from app.auth.seed import DEMO_PATIENT_TOKEN, DEMO_STAFF_TOKEN
+
 _AUTH = {"Authorization": "Bearer test-token"}
 _KE_MOBILE = re.compile(r"^\+254[17][0-9]{8}$")
 _SEEDED_PHONES = {"+254711111111", "+254722222222"}
@@ -20,6 +22,30 @@ def test_me_garbage_token_returns_401(client):
     response = client.get("/me", headers=_AUTH)
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "unauthorized"
+
+
+def test_me_demo_patient_token_skips_firebase(client):
+    response = client.get(
+        "/me",
+        headers={"Authorization": f"Bearer {DEMO_PATIENT_TOKEN}"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["firebase_uid"] == "demo-patient"
+    assert body["role"] == "patient"
+    assert body["facility_id"] is None
+
+
+def test_me_demo_staff_token_skips_firebase(client):
+    response = client.get(
+        "/me",
+        headers={"Authorization": f"Bearer {DEMO_STAFF_TOKEN}"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["firebase_uid"] == "demo-staff"
+    assert body["role"] == "hospital_staff"
+    assert isinstance(body["facility_id"], int)
 
 
 def test_me_unknown_uid_auto_provisions_patient(client, mock_firebase_uid):

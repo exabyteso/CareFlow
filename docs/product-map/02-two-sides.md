@@ -42,7 +42,7 @@ flowchart LR
   class booking,sms join
 ```
 
-One product, one origin, two roles after a voice-consent landing. Not two native apps. `[Verified]` in the product spec.
+One product, one origin, two roles from the marketing homepage (nav and footer CTAs). Voice consent is on `/patient`. Not two native apps. `[Verified]` in the product spec.
 
 ## 2. Care-seeker side
 
@@ -50,8 +50,8 @@ Job: **before the door**, get to the right level of facility with a tolerable wa
 
 | Step | What they do | Why it matters |
 |------|----------------|----------------|
-| Voice consent | Yes or no **before** anything else. Mic stays off until yes | Privacy. Low-vision path is required, not polish |
-| Role | I need care | Same install as hospital; do not dump a desk UI on a sick person |
+| Role | I need care (marketing nav or footer) | Same install as hospital; do not dump a desk UI on a sick person |
+| Voice consent | Yes or no on `/patient` **before** the journey. Mic stays off until yes | Privacy. Low-vision path is required, not polish |
 | Sign-in | Identity + `+254` phone | Booking and SMS need a person and a number |
 | Disclaimer | Not a diagnosis; 999 / go now | Clinical-safety copy |
 | Symptoms | Type or speak | Catalog mapping, then **rules** pick KEPH. Not an LLM diagnosis |

@@ -12,8 +12,7 @@ import {
 import {
   Btn,
   Card,
-  HospitalHeader,
-  HospitalNav,
+  HospitalChrome,
   Pill,
   SectionLabel,
   errorMessage,
@@ -86,24 +85,21 @@ export function FacilityConfig() {
   }
 
   return (
-    <div className="min-h-dvh">
-      <HospitalHeader
-        title="CareFlow — Facility config"
-        subtitle={`${queue?.facility.name ?? "Hospital desk"} · people waiting and station roster`}
-        right={<HospitalNav />}
-      />
-
+    <HospitalChrome
+      title="CareFlow — Facility config"
+      subtitle={`${queue?.facility.name ?? "Hospital desk"} · people waiting and station roster`}
+    >
       {error ? (
         <p
           role="alert"
-          className="mx-5 mt-3 rounded-lg border border-[#c63a4d] bg-[#fbeaec] px-4 py-2.5 text-sm text-[#7a2430]"
+          className="mx-5 mt-3 rounded-lg border border-cf-emergency bg-cf-emergency-bg px-4 py-2.5 text-sm text-cf-emergency"
         >
           {error}
         </p>
       ) : null}
 
       {busy === "load" && !queue ? (
-        <p className="px-5 py-10 text-sm text-[#8fa0af]">Loading config…</p>
+        <p className="px-5 py-10 text-sm text-cf-muted">Loading config…</p>
       ) : null}
 
       {queue ? (
@@ -111,11 +107,11 @@ export function FacilityConfig() {
           <section>
             <SectionLabel>People waiting — ranking input</SectionLabel>
             <Card>
-              <p className="text-xs text-[#8fa0af]">{queue.facility.kmhfr_code}</p>
+              <p className="text-xs text-cf-muted">{queue.facility.kmhfr_code}</p>
               <p className="mt-1 text-3xl font-semibold tabular-nums">
                 {queue.facility.wait_count}
               </p>
-              <p className="mt-1 text-sm text-[#57697a]">
+              <p className="mt-1 text-sm text-cf-muted">
                 Include walk-ins. This number can differ from the CareFlow
                 station list.
               </p>
@@ -134,7 +130,7 @@ export function FacilityConfig() {
                     step={1}
                     value={waitDraft}
                     onChange={(event) => setWaitDraft(event.target.value)}
-                    className="mt-1 block min-h-11 w-28 rounded-lg border border-[#dce4ec] bg-[#eaf1f8] px-3 text-base tabular-nums"
+                    className="mt-1 block min-h-11 w-28 rounded-lg border border-cf-line bg-cf-surface px-3 text-base tabular-nums"
                   />
                 </div>
                 <Btn type="submit" disabled={busy === "wait"}>
@@ -151,7 +147,7 @@ export function FacilityConfig() {
                 <Card key={dept.id} className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">{dept.name}</p>
-                    <p className="text-xs text-[#8fa0af]">
+                    <p className="text-xs text-cf-muted">
                       {dept.stations.map((station) => station.name).join(" · ")}
                     </p>
                   </div>
@@ -165,7 +161,7 @@ export function FacilityConfig() {
                 </Card>
               ))}
             </div>
-            <p className="mt-3 text-xs text-[#8fa0af]">
+            <p className="mt-3 text-xs text-cf-muted">
               Emergency and triage call red-flag tickets first, then by arrival.
               Other desks call by arrival. Staff assign unassigned tickets on
               Station. Department is not chosen by the care-seeker.
@@ -173,6 +169,6 @@ export function FacilityConfig() {
           </section>
         </div>
       ) : null}
-    </div>
+    </HospitalChrome>
   );
 }

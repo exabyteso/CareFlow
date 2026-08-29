@@ -72,14 +72,31 @@ def _ensure_firebase_app() -> None:
         _app_ready = True
 
 
+def _demo_claims(token: str) -> dict | None:
+    """Map a well-known demo Bearer to claims. None if the token is not demo."""
+    from app.auth.seed import DEMO_BEARER_TOKENS
+
+    uid = DEMO_BEARER_TOKENS.get(token.strip())
+    if uid is None:
+        return None
+    return {"uid": uid, "sub": uid}
+
+
 def verify_id_token(token: str) -> dict:
     """Verify a Firebase ID token and return decoded claims (includes ``uid``).
+
+    Demo Bearer values ``careflow-demo-patient`` / ``careflow-demo-staff`` skip
+    Firebase so labeled demo login works without Auth users or Admin credentials.
 
     Raises FirebaseAuthError when credentials are missing or the token is invalid.
     Never logs ``token`` or the private key.
     """
     if not token or not str(token).strip():
         raise FirebaseAuthError("Missing Firebase ID token.")
+
+    demo = _demo_claims(str(token))
+    if demo is not None:
+        return demo
 
     _ensure_firebase_app()
 

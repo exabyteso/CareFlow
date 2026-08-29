@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { HospitalAuthGate } from "./hospital-auth-gate";
 import "./hospital.css";
 
 export const metadata: Metadata = {
@@ -11,5 +12,9 @@ export const metadata: Metadata = {
 export default function HospitalLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
-  return <div className="cf-hospital">{children}</div>;
+  return (
+    <div className="cf-hospital">
+      <HospitalAuthGate>{children}</HospitalAuthGate>
+    </div>
+  );
 }

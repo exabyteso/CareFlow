@@ -18,6 +18,7 @@ This monorepo holds the locked product spec, research, agent scaffolding, and th
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
 | `research/` | [research/README.md](research/README.md) | Market (`big-picture/`) and ops research |
 | `scripts/` | [scripts/README.md](scripts/README.md) | PDF generation and other root scripts |
+| `assets/` | [assets/README.md](assets/README.md) | Brand source art and logo crops |
 
 **Local development:** [ONBOARDING.md](ONBOARDING.md)  
 **Agents and coding tools:** [AGENTS.md](AGENTS.md)  

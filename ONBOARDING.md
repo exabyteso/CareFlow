@@ -18,7 +18,8 @@ Locked stack: Next.js 15 PWA + FastAPI (Python 3.12) + PostgreSQL 16 + pgvector 
 cp .env.example .env
 phantom init
 # Firebase Admin SDK — see Firebase (localhost) below. Without it, /health
-# still works; GET /me and demo Auth user seed do not.
+# still works; Google / real-email GET /me and demo Auth user seed do not.
+# Use demo login skips Firebase and does not need Admin credentials.
 
 phantom exec -- docker compose up --build -d
 # wait until db and api are healthy — api migrates then seeds on boot
@@ -31,7 +32,7 @@ cd frontend && npm install && npm run dev   # :3000
 
 After Compose is healthy, read [ARCHITECTURE.md](ARCHITECTURE.md) for target topology versus what is running now. For hosted **staging** (Render Blueprint, not production; live inventory), see [Staging (Render)](#staging-render).
 
-PWA: `/` role picker (no mic), `/patient` care-seeker + 999, `/hospital` desk this-facility-only. Manifest shortcuts `/patient` and `/hospital`. Service worker is online-only (does not cache API). `/` remains a role picker. There is **no email-register / self-signup form**; Google and email/password sign-in remain on `/patient`, including **Use demo login**.
+PWA: `/` role picker (no mic), `/patient` care-seeker + 999, `/hospital` desk this-facility-only. Manifest shortcuts `/patient` and `/hospital`. Service worker is online-only (does not cache API). `/` remains a role picker. There is **no email-register / self-signup form**; Google and email/password sign-in remain on `/patient`, including **Use demo login** (that button skips Firebase Auth).
 
 Hospital ticketing UI prototype (Vite, not the PWA): [prototype/README.md](prototype/README.md) (`cd prototype && npm install && npm run dev`).
 
@@ -78,14 +79,14 @@ Agents: follow this on onboarding, `docker compose` / `npm run dev`, or any Fire
 
 ### Demo accounts (local and staging)
 
-**Demo only. Never use these credentials on a production Firebase project.** These logins apply to **localhost** and staging [careflow-web.onrender.com](https://careflow-web.onrender.com) (same Firebase project `careflow-kenya`). Postgres `users` rows are per environment.
+**Demo only. Never use these credentials on a production Firebase project.** These logins apply to **localhost** and staging [careflow-web.onrender.com](https://careflow-web.onrender.com). Postgres `users` rows are per environment. **Use demo login** (and signing in with these emails/passwords) skips Firebase Auth so missing Auth users do not return `INVALID_LOGIN_CREDENTIALS`. Google and any other email still use Firebase.
 
-| Email | Password | Role | Facility | Firebase UID |
-|-------|----------|------|----------|--------------|
-| `patient@careflow.local` | `CareflowDemo1!` | care-seeker (`patient`) | — | `demo-patient` |
-| `staff@careflow.local` | `CareflowDemo1!` | hospital staff | Kenyatta National Hospital (`SEED-NBO-KNH`) | `demo-staff` |
+| Email | Password | Role | Facility | UID | Demo Bearer |
+|-------|----------|------|----------|-----|-------------|
+| `patient@careflow.local` | `CareflowDemo1!` | care-seeker (`patient`) | — | `demo-patient` | `careflow-demo-patient` |
+| `staff@careflow.local` | `CareflowDemo1!` | hospital staff | Kenyatta National Hospital (`SEED-NBO-KNH`) | `demo-staff` | `careflow-demo-staff` |
 
-On `/patient`, **Use demo login** fills the care-seeker email and password (the hint shows the email only). There is no email-register form; `/` is still a role picker. `GET /me` needs `Authorization: Bearer <Firebase ID token>` ([docs/api/me.md](docs/api/me.md)).
+On `/patient` and `/hospital`, **Use demo login** signs in immediately (no Firebase round-trip). `GET /me` accepts `Authorization: Bearer <Firebase ID token>` or those demo Bearers ([docs/api/me.md](docs/api/me.md)).
 
 ### When it fails
 
@@ -170,6 +171,7 @@ Paste in the Render dashboard on **careflow-api** if missing. Names only — no 
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
 | `research/` | [research/README.md](research/README.md) | Market (`big-picture/`) and ops research |
 | `scripts/` | [scripts/README.md](scripts/README.md) | PDF generation and other root scripts |
+| `assets/` | [assets/README.md](assets/README.md) | Brand source art and logo crops |
 
 Add a row when you create a new top-level directory. Keep command details in linked READMEs — do not duplicate them here.
 

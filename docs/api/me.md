@@ -4,11 +4,11 @@ Who is signed in: care-seeker or hospital staff for this session.
 
 ## Domain context
 
-`GET /me` returns the CareFlow `users` row for a verified Firebase ID token. Care-seekers are auto-provisioned on first valid token (`role=patient`, `facility_id=null`, `ui_locale=en`). Hospital staff remain invite-only (`demo-staff` seed). There is **no public email-register / self-signup form**; Google and email/password sign-in remain. Demo emails `patient@careflow.local` (`demo-patient`) and `staff@careflow.local` (`demo-staff`) work on **localhost and staging** ([careflow-web.onrender.com](https://careflow-web.onrender.com)) — same Firebase project `careflow-kenya`; Postgres rows are per environment.
+`GET /me` returns the CareFlow `users` row for a verified Firebase ID token **or** a labeled demo Bearer (`careflow-demo-patient` / `careflow-demo-staff`). Care-seekers are auto-provisioned on first valid token (`role=patient`, `facility_id=null`, `ui_locale=en`). Hospital staff remain invite-only (`demo-staff` seed). There is **no public email-register / self-signup form**; Google and email/password sign-in remain. Demo emails `patient@careflow.local` (`demo-patient`) and `staff@careflow.local` (`demo-staff`) work on **localhost and staging** ([careflow-web.onrender.com](https://careflow-web.onrender.com)) — the PWA **Use demo login** path does not call Firebase Auth; Postgres rows are per environment.
 
 **Base path:** `/me` (no `/v1`).
 
-**Authentication:** `get_current_user` (`app.auth.deps`). Header `Authorization: Bearer <Firebase ID token>`. After a successful lookup, the handler sets RLS GUCs for later queries on the same session.
+**Authentication:** `get_current_user` (`app.auth.deps`). Header `Authorization: Bearer <Firebase ID token>` or demo `careflow-demo-patient` / `careflow-demo-staff`. After a successful lookup, the handler sets RLS GUCs for later queries on the same session.
 
 Runtime verification uses `get_bearer_token` (the `Authorization` header), not FastAPI `HTTPBearer` as a route dependency. OpenAPI still advertises the `HTTPBearer` security scheme on this operation for Swagger and Postman.
 
@@ -69,11 +69,11 @@ Hospital staff example: `firebase_uid` `demo-staff` (`staff@careflow.local`), `r
 
 | HTTP | `error.code` | When |
 |------|----------------|------|
-| 401 | `unauthorized` | Missing header, not `Bearer`, empty token, or Firebase verification failed (including Admin SDK not configured). |
+| 401 | `unauthorized` | Missing header, not `Bearer`, empty token, or Firebase verification failed (including Admin SDK not configured). Demo Bearers `careflow-demo-patient` / `careflow-demo-staff` do not need Admin SDK. |
 | 404 | `user_not_provisioned` | Token is valid but the care-seeker INSERT could not complete (phone unique exhausted, database error). Not returned for a first-time Google user when the insert succeeds. |
 | 422 | `validation_error` | Not expected for this route (no query/body schema). Documented as `ErrorEnvelope` to match the global validation handler. |
 
-- **Behaviour notes** — If the verified UID is missing from `users`, the handler **INSERT**s a care-seeker (`role=patient`, `facility_id=NULL`, `ui_locale=en`) with `ON CONFLICT DO NOTHING`. Phone is the token `phone_number` when it matches `^\+254[17][0-9]{8}$`; otherwise a deterministic synthetic `+2547XXXXXXXX` that is never the demo numbers `+254711111111` / `+254722222222`. Hospital staff are **not** auto-provisioned. **404** `user_not_provisioned` only if that insert cannot complete — not for a first-time Google user. Demo rows `demo-patient` / `demo-staff` are inserted if missing (and Nairobi facilities are seeded if the table is empty). Compose boot seed (`python -m app.seed`) is additive — it provisions the same demo rows (and Firebase Auth users when `FIREBASE_*` is set) at API start. Lazy-seed on `/me` still runs if rows are missing. `DEMO_NOTIFY` does not affect this route. Runtime still reads `Authorization` via `get_bearer_token`; OpenAPI advertises HTTP Bearer only. A missing or invalid Bearer still returns **401** `unauthorized`.
+- **Behaviour notes** — Demo Bearers `careflow-demo-patient` and `careflow-demo-staff` map to UIDs `demo-patient` / `demo-staff` without calling Firebase Admin. If the verified UID is missing from `users`, the handler **INSERT**s a care-seeker (`role=patient`, `facility_id=NULL`, `ui_locale=en`) with `ON CONFLICT DO NOTHING`. Phone is the token `phone_number` when it matches `^\+254[17][0-9]{8}$`; otherwise a deterministic synthetic `+2547XXXXXXXX` that is never the demo numbers `+254711111111` / `+254722222222`. Hospital staff are **not** auto-provisioned. **404** `user_not_provisioned` only if that insert cannot complete — not for a first-time Google user. Demo rows `demo-patient` / `demo-staff` are inserted if missing (and Nairobi facilities are seeded if the table is empty). Compose boot seed (`python -m app.seed`) is additive — it provisions the same demo rows (and Firebase Auth users when `FIREBASE_*` is set) at API start. Lazy-seed on `/me` still runs if rows are missing. `DEMO_NOTIFY` does not affect this route. Runtime still reads `Authorization` via `get_bearer_token`; OpenAPI advertises HTTP Bearer only. A missing or invalid Bearer still returns **401** `unauthorized`.
 - **Try it**
 
   | Field | Value |
@@ -82,11 +82,11 @@ Hospital staff example: `firebase_uid` `demo-staff` (`staff@careflow.local`), `r
   | Postman request | Get me |
   | Tag | `auth` |
 
-  Replace the placeholder with a Firebase ID token (never a real secret in this chapter).
+  Replace the placeholder with a Firebase ID token (never a real secret in this chapter), or use a labeled demo Bearer:
 
   ```bash
   curl http://localhost:8000/me \
-    -H "Authorization: Bearer <FIREBASE_ID_TOKEN>"
+    -H "Authorization: Bearer careflow-demo-patient"
   ```
 
 ## Stable error codes and messages
@@ -109,7 +109,7 @@ Hospital desk UI must use `facility_id` from `/me` — never a care-seeker-picke
 
 ## Frontend notes
 
-- Send `Authorization: Bearer …` on every `/me` call.
+- Send `Authorization: Bearer …` on every `/me` call. Demo login uses `careflow-demo-patient` / `careflow-demo-staff` instead of a Firebase ID token.
 - 401 → signed-out / retry token.
 - Google first-time sign-in should **200** as `role: "patient"`. **404** `user_not_provisioned` is rare (insert failure), not “unknown Google”.
 - Do not invent a registration / email-register form this pass.
