@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { LocaleToggle } from "@/components/locale-toggle";
 import {
   getLocale,
-  isLocale,
-  LOCALE_STORAGE_KEY,
   subscribeLocale,
   t,
   type Locale,
@@ -50,62 +48,69 @@ function cancelSpeech(): void {
   }
 }
 
-function pickUtteranceLang(
-  locale: Locale,
+function isEnglishVoiceLang(lang: string): boolean {
+  const normalized = lang.replace(/_/g, "-").toLowerCase();
+  return normalized === "en" || normalized.startsWith("en-");
+}
+
+/** Prefer the product English voice (Daniel), else an en-* voice. */
+function pickEnglishVoice(
   voices: SpeechSynthesisVoice[],
-): string {
-  const preferred = locale === "sw" ? "sw-KE" : "en-KE";
-  const fallback = locale === "sw" ? "sw" : "en";
-  if (voices.length === 0) {
-    return preferred;
+): SpeechSynthesisVoice | null {
+  const english = voices.filter((voice) => isEnglishVoiceLang(voice.lang));
+  const pool = english.length > 0 ? english : voices;
+  if (pool.length === 0) {
+    return null;
   }
-  const langs = voices.map((voice) =>
-    voice.lang.replace(/_/g, "-").toLowerCase(),
+  const daniel = pool.find((voice) =>
+    voice.name.toLowerCase().includes("daniel"),
   );
-  const preferredLower = preferred.toLowerCase();
-  if (
-    langs.some(
-      (lang) => lang === preferredLower || lang.startsWith(preferredLower),
-    )
-  ) {
-    return preferred;
+  if (daniel) {
+    return daniel;
   }
-  const fallbackLower = fallback.toLowerCase();
-  if (
-    langs.some(
-      (lang) => lang === fallbackLower || lang.startsWith(`${fallbackLower}-`),
-    )
-  ) {
-    return fallback;
-  }
-  return preferred;
+  const rank = (voice: SpeechSynthesisVoice): number => {
+    const lang = voice.lang.replace(/_/g, "-").toLowerCase();
+    if (lang === "en-ke" || lang.startsWith("en-ke")) {
+      return 0;
+    }
+    if (lang === "en-gb" || lang.startsWith("en-gb")) {
+      return 1;
+    }
+    if (lang === "en-us" || lang.startsWith("en-us")) {
+      return 2;
+    }
+    if (lang === "en" || lang.startsWith("en")) {
+      return 3;
+    }
+    return 4;
+  };
+  return [...pool].sort((a, b) => rank(a) - rank(b))[0] ?? null;
 }
 
-function hasPersistedLocale(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-  return isLocale(window.localStorage.getItem(LOCALE_STORAGE_KEY));
+function englishWalkthroughText(): string {
+  return [
+    t("greetingTitle", "en"),
+    t("greetingSubtitle", "en"),
+    t("pretriageDisclaimer", "en"),
+    t("rolePickerHeading", "en"),
+    `${t("roleCareSeeker", "en")}: ${t("roleCareSeekerHint", "en")}`,
+    `${t("roleHospital", "en")}: ${t("roleHospitalHint", "en")}`,
+  ].join(" ");
 }
 
-function consentGreetingText(locale: Locale): string {
-  return `${t("greetingTitle", locale)}. ${t("greetingSubtitle", locale)}. ${t("voiceConsentAsk", locale)}`;
-}
-
-function speakConsentQueue(
-  items: { text: string; locale: Locale }[],
-  voices: SpeechSynthesisVoice[],
-): void {
+function speakEnglishWalkthrough(voices: SpeechSynthesisVoice[]): void {
   const synth = getSpeechSynthesis();
   if (!synth) {
     return;
   }
   try {
-    for (const item of items) {
-      const utterance = new SpeechSynthesisUtterance(item.text);
-      utterance.lang = pickUtteranceLang(item.locale, voices);
-      synth.speak(utterance);
+    const utterance = new SpeechSynthesisUtterance(englishWalkthroughText());
+    const voice = pickEnglishVoice(voices);
+    utterance.lang = voice?.lang || "en-KE";
+    if (voice) {
+      utterance.voice = voice;
     }
+    synth.speak(utterance);
   } catch {
     // Feature-detect already ran; still fail closed to visual UI.
   }
@@ -160,6 +165,7 @@ export function VoiceLanding() {
   const [locale, setLocaleState] = useState<Locale>("en");
   const [consent, setConsentState] = useState<VoiceConsent>(null);
   const [ready, setReady] = useState(false);
+  const stopWalkthroughRef = useRef<(() => void) | undefined>(undefined);
 
   useEffect(() => {
     const initialLocale = getLocale();
@@ -172,35 +178,25 @@ export function VoiceLanding() {
       setLocaleState(next);
     });
 
-    let stopVoicesWait: (() => void) | undefined;
-    if (initialConsent === null) {
-      stopVoicesWait = speakWhenVoicesReady((voices) => {
-        const queue = hasPersistedLocale()
-          ? [
-              {
-                text: consentGreetingText(initialLocale),
-                locale: initialLocale,
-              },
-            ]
-          : [
-              { text: consentGreetingText("sw"), locale: "sw" as const },
-              { text: consentGreetingText("en"), locale: "en" as const },
-            ];
-        speakConsentQueue(queue, voices);
-      });
-    }
-
     return () => {
       unsubscribe();
-      stopVoicesWait?.();
+      stopWalkthroughRef.current?.();
       cancelSpeech();
     };
   }, []);
 
   function chooseConsent(value: "yes" | "no") {
     cancelSpeech();
+    stopWalkthroughRef.current?.();
+    stopWalkthroughRef.current = undefined;
     setVoiceConsent(value);
     setConsentState(value);
+    if (value !== "yes") {
+      return;
+    }
+    stopWalkthroughRef.current = speakWhenVoicesReady((voices) => {
+      speakEnglishWalkthrough(voices);
+    });
   }
 
   const yesLabel = t("voiceConsentYes", locale);

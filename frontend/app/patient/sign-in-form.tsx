@@ -13,6 +13,10 @@ import {
 import { t, type Locale } from "@/lib/i18n";
 import { ui } from "@/lib/ui";
 
+/** Labeled local-demo login (same as ONBOARDING); not a production secret. */
+const DEMO_EMAIL = "patient@careflow.local";
+const DEMO_PASSWORD = "CareflowDemo1!";
+
 type SignInFormProps = {
   locale: Locale;
 };
@@ -92,6 +96,12 @@ export function SignInForm({ locale }: SignInFormProps) {
     } finally {
       setBusy(false);
     }
+  }
+
+  function onUseDemo() {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
+    setError(null);
   }
 
   async function onGoogle() {
@@ -205,6 +215,15 @@ export function SignInForm({ locale }: SignInFormProps) {
           </div>
 
           <p className="text-sm text-cf-muted">{t("signInDemoHint", locale)}</p>
+
+          <button
+            type="button"
+            className={ui.secondaryBtnCompact}
+            onClick={onUseDemo}
+            disabled={busy}
+          >
+            {t("signInUseDemo", locale)}
+          </button>
 
           <button type="submit" className={ui.primaryBtn} disabled={busy}>
             {busy ? t("loading", locale) : t("signInSubmit", locale)}

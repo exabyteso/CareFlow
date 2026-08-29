@@ -15,6 +15,8 @@ from app.voice.providers.base import (
 
 _ELEVENLABS_BASE = "https://api.elevenlabs.io/v1"
 _DEFAULT_TIMEOUT = 30.0
+# Premade "Daniel - Steady Broadcaster". Product TTS voice — keep this default.
+DANIEL_STEADY_BROADCASTER_VOICE_ID = "onwK4e9ZLuTAKqWW03F9"
 
 
 def _api_key() -> str:
@@ -22,6 +24,12 @@ def _api_key() -> str:
     if not key:
         raise VoiceConfigurationError("elevenlabs", "ELEVENLABS_API_KEY is not configured.")
     return key
+
+
+def _tts_voice_id() -> str:
+    """Daniel unless ELEVENLABS_VOICE_ID is a non-empty override."""
+    override = os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
+    return override or DANIEL_STEADY_BROADCASTER_VOICE_ID
 
 
 def _lang_to_elevenlabs(lang: str) -> str:
@@ -76,7 +84,7 @@ class ElevenLabsProvider:
 
     def text_to_speech(self, text: str, lang: str) -> bytes:
         key = _api_key()
-        voice_id = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM").strip()
+        voice_id = _tts_voice_id()
         headers = {
             "xi-api-key": key,
             "Accept": "audio/mpeg",

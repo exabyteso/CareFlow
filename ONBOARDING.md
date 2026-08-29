@@ -231,6 +231,7 @@ phantom add VAR_NAME
 | `DEMO_NOTIFY` | `1` = never live-dial or SMS-blast. Keep `1` unless you intend vendor traffic. |
 | `FIREBASE_*` | Admin SDK for `GET /me` and boot seed (Phantom). Walkthrough: [Firebase (localhost)](#firebase-localhost). Demo UIDs in [Local demo accounts](#local-demo-accounts). |
 | `ELEVENLABS_API_KEY` | App runtime for later TTS/STT/calls. **Not** required for hosted ElevenLabs MCP OAuth. |
+| `ELEVENLABS_VOICE_ID` | ElevenLabs TTS voice. Product default is Daniel - Steady Broadcaster (`onwK4e9ZLuTAKqWW03F9`). |
 
 **`.env` file:** Contains phantom tokens (`phm_...`), not real secrets. Safe to commit if tracked; real values are injected by `phantom exec` at runtime.
 

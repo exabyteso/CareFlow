@@ -42,6 +42,7 @@ export const MESSAGE_KEYS = [
   "signInSubmit",
   "signInGoogle",
   "signInDemoHint",
+  "signInUseDemo",
   "signOut",
   "signedInAs",
   "guestRecommendHint",
@@ -78,7 +79,7 @@ const catalog: Record<Locale, Record<MessageKey, string>> = {
     greetingSubtitle:
       "Kenya hospital pretriage — we help you find a suitable facility. This is not a diagnosis.",
     voiceConsentAsk:
-      "Would you like to turn on voice features? The microphone starts only after you say yes.",
+      "Would you like a spoken walkthrough in English? The microphone starts only after you say yes.",
     voiceConsentYes: "Yes",
     voiceConsentNo: "No",
     voiceConsentYesSwHint: "Ndiyo",
@@ -109,7 +110,9 @@ const catalog: Record<Locale, Record<MessageKey, string>> = {
     signInPassword: "Password",
     signInSubmit: "Sign in",
     signInGoogle: "Continue with Google",
-    signInDemoHint: "Demo: patient@careflow.local",
+    signInDemoHint:
+      "Demo email: patient@careflow.local — use the fill button, then Sign in.",
+    signInUseDemo: "Use demo login",
     signOut: "Sign out",
     signedInAs: "Signed in as",
     guestRecommendHint:
@@ -134,7 +137,7 @@ const catalog: Record<Locale, Record<MessageKey, string>> = {
       "You can review facilities now. Booking will be available in a later update.",
     errorUnauthorized: "Please sign in again.",
     errorUserNotProvisioned:
-      "This account is not set up for CareFlow. There is no self-signup.",
+      "We could not set up this CareFlow account. Sign out and try again.",
     errorLocationOutOfRange: "That location is outside Kenya coverage.",
     errorGeneric: "Something went wrong. Please try again.",
     errorNetwork: "Network error. Check your connection and try again.",
@@ -146,7 +149,7 @@ const catalog: Record<Locale, Record<MessageKey, string>> = {
     greetingSubtitle:
       "Uelekezaji wa hospitali nchini Kenya — tunakusaidia kupata kituo kinachofaa. Hii si utambuzi.",
     voiceConsentAsk:
-      "Je, ungependa kuwasha huduma za sauti? Maikrofoni itaanza tu baada ya kusema ndiyo.",
+      "Je, ungependa mwongozo wa sauti kwa Kiingereza? Maikrofoni itaanza tu baada ya kusema ndiyo.",
     voiceConsentYes: "Ndiyo",
     voiceConsentNo: "Hapana",
     voiceConsentYesSwHint: "Ndiyo",
@@ -177,7 +180,9 @@ const catalog: Record<Locale, Record<MessageKey, string>> = {
     signInPassword: "Nenosiri",
     signInSubmit: "Ingia",
     signInGoogle: "Endelea na Google",
-    signInDemoHint: "Onyesho: patient@careflow.local",
+    signInDemoHint:
+      "Barua pepe ya onyesho: patient@careflow.local — tumia kitufe cha kujaza, kisha Ingia.",
+    signInUseDemo: "Tumia akaunti ya onyesho",
     signOut: "Toka",
     signedInAs: "Umeingia kama",
     guestRecommendHint:
@@ -202,7 +207,7 @@ const catalog: Record<Locale, Record<MessageKey, string>> = {
       "Unaweza kuangalia vituo sasa. Uhifadhi utapatikana katika sasisho la baadaye.",
     errorUnauthorized: "Tafadhali ingia tena.",
     errorUserNotProvisioned:
-      "Akaunti hii haijaandaliwa kwa CareFlow. Hakuna kujisajili mwenyewe.",
+      "Hatukuweza kuandaa akaunti hii ya CareFlow. Toka na ujaribu tena.",
     errorLocationOutOfRange: "Mahali hapo ni nje ya eneo la Kenya.",
     errorGeneric: "Kuna hitilafu. Tafadhali jaribu tena.",
     errorNetwork: "Hitilafu ya mtandao. Angalia muunganisho wako na ujaribu tena.",

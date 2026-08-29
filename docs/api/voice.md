@@ -31,6 +31,7 @@ In-app speech for care-seekers and staff (J8). **ElevenLabs first** for English/
 - **Request** — JSON `{ "text", "lang" }`.
 - **Success** — `200` `audio/mpeg` body; headers `X-Voice-Provider`, `X-Voice-Lang`.
 - **Errors** — `401`, `422`, `502`.
+- **ElevenLabs voice** — premade **Daniel - Steady Broadcaster** (`onwK4e9ZLuTAKqWW03F9`). Override only via `ELEVENLABS_VOICE_ID`; empty env falls back to Daniel.
 
 ## Implementation status snapshot (backend)
 
