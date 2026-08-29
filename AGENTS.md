@@ -36,6 +36,7 @@ Every **top-level** directory (except `.cursor/`, `.claude/`, and tool dirs) sho
 | Research / ADRs | [docs/research/](docs/research/) |
 | Research prompt policy | [research/AGENTS.md](research/AGENTS.md), `.cursor/rules/research-prompts.mdc` |
 | Senior review | `.cursor/rules/senior-code-review.mdc` |
+| PR auto-review (Alex / Grok 4.6) | [docs/agent-sops/alex-pr-review-automation.md](docs/agent-sops/alex-pr-review-automation.md) |
 
 When building with subagents, read **agent-and-subagent-workflow.md** before spawning workers.
 

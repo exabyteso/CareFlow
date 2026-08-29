@@ -13,7 +13,7 @@
 # on the instance (compose init does this locally; dashboard SQL on Render).
 # pgvector is required (D-001).
 #
-# API container listens on 8000 (backend/Dockerfile). Health: GET /health.
+# API container listens on $PORT (default 8000 locally). Health: GET /health.
 
 services:
   - type: web
@@ -26,8 +26,6 @@ services:
     dockerContext: ./backend
     healthCheckPath: /health
     envVars:
-      - key: PORT
-        value: "8000"
       # Same Render connectionString for both — staging shortcut (see header).
       - key: DATABASE_URL
         fromDatabase:
