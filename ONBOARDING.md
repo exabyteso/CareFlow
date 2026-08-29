@@ -29,7 +29,7 @@ cd frontend && npm install && npm run dev   # :3000
 
 `phantom exec -- docker compose up --build -d` is enough for migrate + seed **and** injects `FIREBASE_*` into `api`. Plain `docker compose up` is fine for `/health` only. Do **not** run a separate `alembic upgrade head` on this first-time compose path. **Host pytest against `db` only** still needs Alembic on the host — see [docs/testing-reference.md](docs/testing-reference.md) (CI starts `db` only, then host Alembic + pytest).
 
-After Compose is healthy, read [ARCHITECTURE.md](ARCHITECTURE.md) for target topology versus what is running now. For hosted **staging** (Render Blueprint, not production), see [Staging (Render)](#staging-render) — IaC is apply-ready; there are no live hosted URLs until a human applies the Blueprint.
+After Compose is healthy, read [ARCHITECTURE.md](ARCHITECTURE.md) for target topology versus what is running now. For hosted **staging** (Render Blueprint, not production; live inventory), see [Staging (Render)](#staging-render).
 
 PWA: `/` role picker (no mic), `/patient` care-seeker + 999, `/hospital` desk this-facility-only. Manifest shortcuts `/patient` and `/hospital`. Service worker is online-only (does not cache API). There is **no PWA login UI this pass** (`frontend/app/page.tsx` is still a role picker).
 
@@ -94,7 +94,7 @@ These are for operators, curl / `GET /me`, and a later PWA login UI — not a fo
 | `GET /me` → 401 `unauthorized` | Missing/invalid Bearer, or Admin SDK not configured | Walkthrough steps 2–4. Confirm Compose was started with `phantom exec`. |
 | API log: `Firebase Admin credentials are not configured; skipping demo Auth upsert` | `FIREBASE_*` empty in the `api` container | Same — Phantom add + `phantom exec -- docker compose up --build -d`. |
 | `user_not_provisioned` (404) | Token is valid but UID is not `demo-patient` / `demo-staff` (and not otherwise seeded) | Expected for unknown Google accounts. Seed or use a demo email. |
-| Google popup closes: `auth/unauthorized-domain` | Host not in Auth authorized domains | `localhost` is default. After Render assigns a PWA hostname, add it there ([Staging (Render)](#staging-render)). Custom hosts: [Auth settings](https://console.firebase.google.com/project/careflow-kenya/authentication/settings). |
+| Google popup closes: `auth/unauthorized-domain` | Host not in Auth authorized domains | `localhost` is default. Staging PWA: add `careflow-web.onrender.com` ([Staging (Render)](#staging-render)). Custom hosts: [Auth settings](https://console.firebase.google.com/project/careflow-kenya/authentication/settings). |
 
 Agents: if Phantom MCP is connected, call `phantom_list_secrets` (names only) before prompting. If `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, or `FIREBASE_PRIVATE_KEY` are missing, start this walkthrough immediately — do not treat `/health` as “Firebase is working.”
 
@@ -111,28 +111,36 @@ Once `api` is up, Swagger UI is at [http://localhost:8000/docs](http://localhost
 
 ## Staging (Render)
 
-Not production. Local Compose remains the default for development. Staging is **intended** via Render from branch **`dev`** after a human applies the Blueprint — [render.yaml](render.yaml) is apply-ready (`careflow-api`, `careflow-web`, `careflow-db`). **The Blueprint is not applied.** Render workspace **My Workspace** currently has no services and no Postgres instances. **There are no live `.onrender.com` URLs.** Do not invent hostnames; Render assigns them after apply (often `{name}.onrender.com`, unconfirmed).
+Not production. Do not treat this as NFR-AVAIL-01. Local Compose remains the default for development.
 
-Docker API cannot be created via Render MCP `create_web_service` (Docker unsupported). Apply in the dashboard.
+**Blueprint applied** (2026-08-28+): [`exs-da91jphsrm7s73atarb0`](https://dashboard.render.com/blueprint/exs-da91jphsrm7s73atarb0) — repo `exabyteso/CareFlow`, branch **`dev`**, workspace **My Workspace** (`tea-da90etlg1s2s738q8l9g`). Do **not** create a second Blueprint. IaC remains [render.yaml](render.yaml).
 
-### Apply the Blueprint (human)
+| Service | Kind | ID | Public URL / notes |
+|---------|------|----|--------------------|
+| **careflow-api** | Docker (`./backend/Dockerfile`), Starter, Oregon | `srv-da91rdhsrm7s73atu4ig` | [`https://careflow-api-y00r.onrender.com`](https://careflow-api-y00r.onrender.com) — live. `GET /health` → `{"status":"ok"}`. `autoDeployTrigger: checksPass`. |
+| **careflow-web** | Node (`./build.sh` / `cd frontend && npm run start`), Starter | `srv-da91re1srm7s73atu5eg` | [`https://careflow-web.onrender.com`](https://careflow-web.onrender.com). First web build may have raced the API hostname (`NEXT_PUBLIC_API_URL` is build-time). |
+| **careflow-db** | Postgres 16, plan `0.1c-256mb`, Oregon | `dpg-da91r39srm7s73attatg-a` | After Alembic `0001` on boot: extensions `plpgsql`, `vector`, `cube`, `earthdistance`. No separate dashboard SQL unless they are missing. |
 
-1. Open [Create Blueprint](https://dashboard.render.com/blueprint/new?repo=https://github.com/exabyteso/CareFlow) for repo `exabyteso/CareFlow`.
-2. Link branch **`dev`**.
-3. Accept **Starter** for the two web services (`careflow-api` Docker, `careflow-web` Node). Accept Postgres 16 **free trial** for `careflow-db`.
-4. After the database attaches, enable extensions **`vector`**, **`cube`**, and **`earthdistance`** on the instance (Compose init does this locally; use dashboard SQL on Render). `vector` (pgvector) is required ([D-001](research/decision-log.md)).
-5. Paste dashboard secrets (`sync: false`) — names only below. Never put values in git or chat.
-6. Once Render assigns the PWA hostname, add it to Firebase Auth [authorized domains](https://console.firebase.google.com/project/careflow-kenya/authentication/settings) on project **`careflow-kenya`**. Do **not** create a second Firebase project.
+**Leftover (not this Blueprint):** static site **CareFlow** (`srv-da91buqjnfac73ccfisg`) at [`https://careflow-sei7.onrender.com`](https://careflow-sei7.onrender.com). Still running. Humans suspend it after careflow-web is live; **agents must not delete it.**
 
-### CI/CD (after apply)
+Render MCP **cannot** create Docker web services. Further API changes: git push to **`dev`** (after CI checks) or parent `trigger_deploy` on namespace `user-render`. Pass `workspaceId` `tea-da90etlg1s2s738q8l9g` on each MCP call. Do **not** `/add-plugin render` or add a second `render` block to project `.cursor/mcp.json`.
 
-Push or merge to **`dev`** → GitHub Actions checks **`CI / test`** and **`CI / lint`** (on the `dev` branch once pushed) → Render `autoDeployTrigger: checksPass`. Not a GitHub Actions deploy job. Not production on `main`. `DEMO_NOTIFY=1`. Those GitHub checks **must exist on `dev`** or `checksPass` will not deploy.
+### Remaining human steps (not agent work)
 
-`careflow-web` builds from the repository root via [`./build.sh`](build.sh) (`npm ci` + `next build` in `frontend/`). Start is `cd frontend && npm run start`. `NEXT_PUBLIC_API_URL` is build-time (from `careflow-api` `RENDER_EXTERNAL_URL`); the first `careflow-web` deploy may need a rebuild after the API hostname exists.
+1. Dashboard → **careflow-api** → Environment: paste `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (`sync: false`) if not already set. Never into chat. This is the remaining auth gate for `GET /me` if secrets were missing.
+2. Firebase Auth [authorized domains](https://console.firebase.google.com/project/careflow-kenya/authentication/settings) on project **`careflow-kenya`**: add `careflow-web.onrender.com` (and `careflow-sei7.onrender.com` only if that static site stays). Do **not** create a second Firebase project.
+3. After careflow-web is live, **suspend** leftover static site CareFlow. Agents must not delete it.
+4. If the first web deploy baked an empty `NEXT_PUBLIC_API_URL`, rebuild/redeploy **careflow-web** after the API URL exists.
+
+### CI/CD
+
+Push or merge to **`dev`** → GitHub Actions **`CI / test`** and **`CI / lint`** → Render `autoDeployTrigger: checksPass`. Not a GitHub Actions deploy job. Not production on `main`. `DEMO_NOTIFY=1`. Those GitHub checks **must exist on `dev`** or `checksPass` will not deploy.
+
+`careflow-web` builds from the repository root via [`./build.sh`](build.sh) (`npm ci` + `next build` in `frontend/`). Start is `cd frontend && npm run start`. `NEXT_PUBLIC_API_URL` is build-time (from `careflow-api` `RENDER_EXTERNAL_URL`).
 
 ### Dashboard secrets (`sync: false`)
 
-Paste in the Render dashboard after apply. Names only — no values in this repo.
+Paste in the Render dashboard on **careflow-api** if missing. Names only — no values in this repo or chat.
 
 **Required for `GET /me`:**
 
@@ -147,9 +155,7 @@ Paste in the Render dashboard after apply. Names only — no values in this repo
 - `TWILIO_*`
 - `PAWA_AI_API_KEY`
 
-**Blueprint-wired (do not paste):** `DATABASE_URL` and `DATABASE_ADMIN_URL` both from `careflow-db` `connectionString` (staging shortcut — same owner string; dual `careflow` / `careflow_owner` + RLS is a follow-up). `FRONTEND_ORIGIN` from `careflow-web` `RENDER_EXTERNAL_URL`. `NEXT_PUBLIC_API_URL` from `careflow-api` `RENDER_EXTERNAL_URL`.
-
-Live host placeholders until apply: **API hostname** (from `careflow-api`), **PWA hostname** (from `careflow-web`), **Postgres host** (from `careflow-db`). Fill these only after Render assigns them.
+**Blueprint-wired (do not paste):** `DATABASE_URL` and `DATABASE_ADMIN_URL` both from `careflow-db` `connectionString` (staging shortcut — same owner string for both; dual `careflow` / `careflow_owner` + RLS is out of scope). `FRONTEND_ORIGIN` from `careflow-web` `RENDER_EXTERNAL_URL`. `NEXT_PUBLIC_API_URL` from `careflow-api` `RENDER_EXTERNAL_URL`.
 
 ## Directory map
 
@@ -165,6 +171,12 @@ Live host placeholders until apply: **API hostname** (from `careflow-api`), **PW
 | `scripts/` | [scripts/README.md](scripts/README.md) | PDF generation and other root scripts |
 
 Add a row when you create a new top-level directory. Keep command details in linked READMEs — do not duplicate them here.
+
+## PR auto-review (Alex)
+
+Same-repo PRs targeting `dev` or `main` are reviewed by a Cursor Cloud Agent (Grok 4.6, Alex senior bar). GitHub squash-auto-merges only after that approval **and** CI jobs `test` and `lint` are green.
+
+Create or edit the Cloud Agent in the **Agents Window** (`/automate`) using [docs/agent-sops/alex-pr-review-automation.md](docs/agent-sops/alex-pr-review-automation.md). This IDE chat cannot save Automations.
 
 ## Cursor plugins and MCP
 

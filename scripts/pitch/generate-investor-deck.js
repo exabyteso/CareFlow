@@ -9,24 +9,25 @@
  * that are not already cited.
  */
 
+const path = require("path");
 const pptxgen = require("pptxgenjs");
 
-const OUT =
-  "/Users/ethan/Documents/Projects/CursorHackathon/docs/careflow-investor-pitch.pptx";
+const OUT = path.join(__dirname, "../../docs/careflow-investor-pitch.pptx");
 
-// Brand tokens mirror frontend/app/globals.css. Hex only, never "#", never 8 digits.
+// Navy / blue investor theme. Hex only, never "#", never 8 digits.
+// Emergency red stays semantic (red-flag / 999), not a brand accent.
 const C = {
-  ink: "14211e",
-  teal: "0f5c4c",
-  tealDark: "0a3d33",
-  bg: "f4f7f6",
+  ink: "102a43",
+  teal: "1b4f8a",
+  tealDark: "123a66",
+  bg: "f4f7fb",
   card: "ffffff",
-  muted: "3d524c",
-  line: "c5d4cf",
+  muted: "3d5270",
+  line: "c5d0e0",
   emergency: "9b1c1c",
   emergencyBg: "fde8e8",
-  onDark: "f4f7f6",
-  onDarkMuted: "c5d4cf",
+  onDark: "f4f7fb",
+  onDarkMuted: "b8c7db",
 };
 
 const F = { title: "Cambria", body: "Calibri", mono: "Courier New" };
@@ -413,7 +414,7 @@ pres.title = "CareFlow — Kenya hospital pretriage";
     {
       stat: "~200%",
       label: "occupancy at Mbagathi",
-      body: "About 1,000 outpatients through the door every day.",
+      body: "~1,000 outpatients through the door every day.",
     },
   ];
   stats.forEach(function (cfg, i) {
@@ -609,7 +610,7 @@ pres.title = "CareFlow — Kenya hospital pretriage";
 
   text(
     s,
-    "Adjacent, but not the wedge: national digital-health rails, private booking marketplaces, teleconsult apps. None of them sits before the door with KEPH level, wait, booking and arrived/no-show in one loop. [Likely]",
+    "Adjacent, but not the wedge: AfyaKE/AfyaLink, Vezeeta/Ponea, teleconsult apps. None of them sits before the door with KEPH level, wait, booking and arrived/no-show in one loop. [Likely]",
     {
       x: M.left,
       y: 5.3,
@@ -676,7 +677,7 @@ pres.title = "CareFlow — Kenya hospital pretriage";
 
   s.addNotes(
     "Sources: Singapore virtual care centre — 69% avoidance of an emergency department visit within 72 hours and 4.9% undertriage, JMIR Formative Research 2026. Label it out loud as an analog, not a Kenya randomised controlled trial. In-ED comparators: ETAT and Smart Triage (see the safety slide). Referral enforcement at Kenyatta National Hospital reduced direct Level 2–3 referrals, but reactively, at the door.\n\n" +
-      "Landscape whitespace [Likely]: no public product we can find combines community-entered symptoms, a KEPH minimum level, wait plus distance ranking, a booking, and an arrived/no-show close. Adjacent products worth naming in the room if asked, each as not-the-wedge: national digital-health and insurance rails, private booking marketplaces such as Vezeeta and Ponea, and teleconsult apps.\n\n" +
+      "Landscape whitespace [Likely]: no public product we can find combines community-entered symptoms, a KEPH minimum level, wait plus distance ranking, a booking, and an arrived/no-show close. Adjacent products worth naming in the room if asked, each as not-the-wedge: AfyaKE/AfyaLink (national rails), KNH referral enforcement, Smart Triage and ETAT (in-ED), Vezeeta/Ponea (booking marketplaces), and teleconsult apps.\n\n" +
       "Objection: health tech in Kenya is crowded. Answer: it is, and we are not claiming there are no competitors. We are claiming none of those products occupies the before-the-door position. Marketplaces book the facility the family already picked; teleconsult replaces the visit; the rails move claims and records. None of them changes which KEPH level the family walks into or closes the loop with the desk."
   );
 }
@@ -714,7 +715,7 @@ pres.title = "CareFlow — Kenya hospital pretriage";
     });
     if (col < 3) arrowRight(s, x + 2.68, y + 0.575, 0.39);
   });
-  arrowDown(s, 12.35, 3.0, 0.28);
+  // Row wrap is numbered 1–8; a down-arrow off step 4 would read as 4→8.
 
   card(s, M.left, 4.7, 7.3, 1.3, C.card, { hairline: true });
   text(s, "RANKING RULE", {
@@ -931,7 +932,7 @@ pres.title = "CareFlow — Kenya hospital pretriage";
   });
   text(s, "The join", {
     x: 5.6,
-    y: 3.16,
+    y: 3.11,
     w: 2.1,
     h: 0.34,
     fontSize: 18,
@@ -940,17 +941,17 @@ pres.title = "CareFlow — Kenya hospital pretriage";
   });
   text(s, "One row both sides can see", {
     x: 5.6,
-    y: 3.54,
+    y: 3.49,
     w: 2.1,
     h: 0.5,
     fontSize: 11,
     color: C.line,
     lineSpacingMultiple: 1.05,
   });
-  arrowRight(s, 4.98, 3.37, 0.3);
-  arrowRight(s, 8.03, 3.37, 0.3);
+  arrowRight(s, 4.98, 3.3, 0.3);
+  arrowRight(s, 8.03, 3.3, 0.3);
 
-  card(s, 8.4, 1.95, 4.3, 2.85, C.card, { hairline: true });
+  card(s, 8.4, 1.95, 4.3, 2.7, C.card, { hairline: true });
   text(s, "Hospital desk", {
     x: 8.72,
     y: 2.2,
@@ -963,24 +964,33 @@ pres.title = "CareFlow — Kenya hospital pretriage";
   text(
     s,
     [
-      { text: "Types people waiting (wait_count)", options: { bullet: true, breakLine: true } },
-      { text: "Sees today's bookings", options: { bullet: true, breakLine: true } },
-      { text: "Marks arrived or no-show", options: { bullet: true } },
+      {
+        text: "Types people waiting (wait_count)",
+        options: { bullet: { indent: 16 }, breakLine: true },
+      },
+      {
+        text: "Sees today's bookings",
+        options: { bullet: { indent: 16 }, breakLine: true },
+      },
+      {
+        text: "Marks arrived or no-show",
+        options: { bullet: { indent: 16 } },
+      },
     ],
     {
       x: 8.72,
-      y: 2.72,
+      y: 2.68,
       w: 3.66,
-      h: 1.8,
+      h: 1.4,
       fontSize: 13.5,
       color: C.muted,
       margin: 0,
-      paraSpaceAfter: 8,
+      paraSpaceAfter: 12,
     }
   );
   text(s, "No chat — the booking row is the channel.", {
     x: 8.72,
-    y: 4.36,
+    y: 4.2,
     w: 3.66,
     h: 0.34,
     fontSize: 11.5,
@@ -988,13 +998,13 @@ pres.title = "CareFlow — Kenya hospital pretriage";
     color: C.teal,
   });
 
-  card(s, M.left, 5.1, 12.1, 1.15, C.ink);
+  card(s, M.left, 5.0, 12.1, 1.15, C.ink);
   text(
     s,
     "If only the care-seeker side exists, the wait numbers are fiction. The desk update is the product, not a chore.",
     {
       x: M.left + 0.4,
-      y: 5.35,
+      y: 5.25,
       w: 11.3,
       h: 0.7,
       fontSize: 15.5,
@@ -1196,7 +1206,7 @@ pres.title = "CareFlow — Kenya hospital pretriage";
   );
 
   card(s, 8.4, 4.4, 4.3, 1.9, C.ink);
-  text(s, "Out of scope this pass", {
+  text(s, "SHA deferred", {
     x: 8.72,
     y: 4.62,
     w: 3.66,
@@ -1207,7 +1217,7 @@ pres.title = "CareFlow — Kenya hospital pretriage";
   });
   text(
     s,
-    "National insurance rails, claims and reimbursement integration. Deferred on purpose — the wedge is shifting load before the door, not moving money after it.",
+    "SHA claims, AfyaKE and HIE stay out of this pass. The wedge is shifting load before the door, not moving money after it.",
     {
       x: 8.72,
       y: 5.04,
@@ -1226,7 +1236,7 @@ pres.title = "CareFlow — Kenya hospital pretriage";
 
   s.addNotes(
     "Sources: peak demand on Monday, 08:00–12:00 — Mwaura et al., AKUHN, PLOS One 2025. One-way SMS reminders and appointment attendance in Africa, odds ratio 2.03 — PLOS One 2019 meta-analysis. Kenya antenatal care missed appointments 35–42% — Homabay and Kisumu studies plus systematic reviews.\n\n" +
-      "Objection: who actually pays for this? Answer: not national insurance in this pass — that is deliberately deferred. The first budget we test is county and facility, where the pain is measurable: low-acuity load arriving at the wrong level, a peak window that is predictable enough to shift, and an SMS channel with published evidence that it improves attendance. Monetisation stays labelled as a hypothesis until a pilot prices it. We are not presenting a market-size calculation."
+      "Objection: who actually pays for this? Answer: SHA is deferred. The first budget we test is county and facility, where the pain is measurable: low-acuity load arriving at the wrong level, a peak window that is predictable enough to shift, and an SMS channel with published evidence that it improves attendance. Monetisation stays labelled as a hypothesis until a pilot prices it. We are not presenting a market-size calculation."
   );
 }
 
