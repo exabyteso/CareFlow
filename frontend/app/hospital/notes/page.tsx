@@ -9,7 +9,7 @@ export default function HospitalNotesPage() {
     <Suspense
       fallback={
         <HospitalChrome title="CareFlow — Notes" subtitle="Loading notes…">
-          <p className="px-5 py-10 text-sm text-cf-muted">Loading notes…</p>
+          <p className="px-4 py-10 text-sm text-cf-muted md:px-5">Loading notes…</p>
         </HospitalChrome>
       }
     >

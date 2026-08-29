@@ -84,7 +84,7 @@ export function HospitalNotesContent() {
 
   return (
     <HospitalChrome title="CareFlow — Notes" subtitle={subtitle}>
-      <div className="p-5">
+      <div className="p-4 md:p-5">
         <p>
           <Link href="/hospital" className={ui.textLink}>
             Back to hospital desk

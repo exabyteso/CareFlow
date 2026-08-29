@@ -59,36 +59,60 @@ export function HospitalHeader({
   title,
   subtitle,
   right,
+  footer,
 }: {
   title: string;
   subtitle: string;
   right?: ReactNode;
+  footer?: ReactNode;
 }) {
   return (
-    <header className="flex items-center justify-between bg-cf-primary px-5 pb-4 pt-5 text-white shadow-sm">
-      <div className="flex min-w-0 items-center gap-3">
-        <BrandMark size={36} className="rounded-lg" />
-        <div className="min-w-0">
-          <p className="text-[17px] font-semibold tracking-tight">{title}</p>
-          <p className="mt-0.5 text-xs text-white/70">{subtitle}</p>
+    <header className="bg-cf-primary text-white shadow-sm">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-5 md:pb-4 md:pt-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <BrandMark size={36} className="rounded-lg" />
+          <div className="min-w-0">
+            <p className="text-base font-semibold tracking-tight md:text-[17px]">
+              {title}
+            </p>
+            <p className="mt-0.5 text-xs leading-snug text-white/70 md:leading-4">
+              {subtitle}
+            </p>
+          </div>
         </div>
+        <div className="shrink-0">{right}</div>
       </div>
-      {right}
+      {footer}
     </header>
   );
 }
 
-/** Compact horizontal links for the header (small screens / existing station-desk). */
+/** Compact horizontal links for the header (phones only; md+ uses the sidebar). */
 export function HospitalNav({ className = "" }: { className?: string } = {}) {
+  const pathname = usePathname();
+
   return (
     <nav
-      className={`flex flex-wrap items-center gap-3 text-xs text-white/80 ${className}`}
+      className={`flex items-center gap-1 overflow-x-auto px-2 pb-2 md:hidden ${className}`}
+      aria-label="Hospital"
     >
-      {HEADER_LINKS.map((link) => (
-        <Link key={link.href} href={link.href} className="hover:text-white">
-          {link.label}
-        </Link>
-      ))}
+      {HEADER_LINKS.map((link) => {
+        const active = navIsActive(pathname, link.href);
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            aria-current={active ? "page" : undefined}
+            className={`inline-flex shrink-0 items-center rounded-lg px-3 py-2 text-sm hover:bg-white/10 hover:text-white ${
+              active
+                ? "bg-white/15 font-semibold text-white"
+                : "text-white/80"
+            }`}
+          >
+            {link.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
@@ -143,12 +167,8 @@ export function HospitalChrome({
         <HospitalHeader
           title={title}
           subtitle={subtitle}
-          right={
-            <div className="flex items-center gap-3">
-              <HospitalNav className="md:hidden" />
-              <HospitalSignOut />
-            </div>
-          }
+          right={<HospitalSignOut />}
+          footer={<HospitalNav />}
         />
         {children}
       </div>
@@ -173,7 +193,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-xl border border-cf-line bg-white p-4 ${className}`}
+      className={`rounded-xl border border-cf-line bg-white p-5 md:p-4 ${className}`}
     >
       {children}
     </div>
