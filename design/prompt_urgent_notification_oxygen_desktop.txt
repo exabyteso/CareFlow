@@ -1,0 +1,1 @@
+A desktop UI widget or section, adapting the 'Urgent Notification and Oxygen' mobile cards. The urgent notification card with the map and buttons, and the oxygen level display should be arranged for a larger screen, perhaps as prominent dashboard elements. Maintain the rounded corners, soft shadows, and overall design system consistency.
