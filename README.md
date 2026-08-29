@@ -2,7 +2,7 @@
 
 Kenya hospital pretriage: map symptoms to the right KEPH level, recommend the nearest facility with the shortest hospital-reported wait, and book — with SMS and voice reminders.
 
-This monorepo holds the locked product spec, research, agent scaffolding, and the FastAPI + Next.js PWA trees. **Local development** uses Docker Compose (the default). This is **not** a production service. **Staging** is intended via Render from the `dev` branch after the Blueprint is applied in the dashboard — there are no live hosted URLs until that apply ([ONBOARDING.md](ONBOARDING.md#staging-render)).
+This monorepo holds the locked product spec, research, agent scaffolding, and the FastAPI + Next.js PWA trees. **Local development** uses Docker Compose (the default). This is **not** a production service. **Staging** is live on Render from the `dev` branch ([ONBOARDING.md](ONBOARDING.md#staging-render)).
 
 **GitHub:** [github.com/exabyteso/CareFlow](https://github.com/exabyteso/CareFlow)
 
