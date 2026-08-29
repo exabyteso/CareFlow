@@ -92,18 +92,18 @@ export function FacilityConfig() {
       {error ? (
         <p
           role="alert"
-          className="mx-5 mt-3 rounded-lg border border-cf-emergency bg-cf-emergency-bg px-4 py-2.5 text-sm text-cf-emergency"
+          className="mx-4 mt-3 rounded-lg border border-cf-emergency bg-cf-emergency-bg px-4 py-2.5 text-sm text-cf-emergency md:mx-5"
         >
           {error}
         </p>
       ) : null}
 
       {busy === "load" && !queue ? (
-        <p className="px-5 py-10 text-sm text-cf-muted">Loading config…</p>
+        <p className="px-4 py-10 text-sm text-cf-muted md:px-5">Loading config…</p>
       ) : null}
 
       {queue ? (
-        <div className="grid grid-cols-1 gap-6 p-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 p-4 md:p-5 lg:grid-cols-2">
           <section>
             <SectionLabel>People waiting — ranking input</SectionLabel>
             <Card>
@@ -144,8 +144,8 @@ export function FacilityConfig() {
             <SectionLabel>Departments — this facility</SectionLabel>
             <div className="flex flex-col gap-2">
               {queue.departments.map((dept) => (
-                <Card key={dept.id} className="flex items-center justify-between">
-                  <div>
+                <Card key={dept.id} className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">{dept.name}</p>
                     <p className="text-xs text-cf-muted">
                       {dept.stations.map((station) => station.name).join(" · ")}

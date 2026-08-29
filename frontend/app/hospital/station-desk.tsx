@@ -364,19 +364,19 @@ export function StationDesk() {
       {error ? (
         <p
           role="alert"
-          className="mx-5 mt-3 rounded-lg border border-cf-emergency bg-cf-emergency-bg px-4 py-2.5 text-sm text-cf-emergency"
+          className="mx-4 mt-3 rounded-lg border border-cf-emergency bg-cf-emergency-bg px-4 py-2.5 text-sm text-cf-emergency md:mx-5"
         >
           {error}
         </p>
       ) : null}
 
       {busy === "load" && !queue ? (
-        <p className="px-5 py-10 text-sm text-cf-muted">Loading station…</p>
+        <p className="px-4 py-10 text-sm text-cf-muted md:px-5">Loading station…</p>
       ) : null}
 
       {queue ? (
-        <div className="flex gap-5 overflow-x-auto p-5">
-          <aside className="w-64 shrink-0">
+        <div className="flex flex-col gap-4 p-4 md:flex-row md:gap-5 md:overflow-x-auto md:p-5">
+          <aside className="w-full md:w-64 md:shrink-0">
             <SectionLabel>Stations — select one to open its screen</SectionLabel>
 
             <div
@@ -396,12 +396,12 @@ export function StationDesk() {
               </p>
             </div>
 
-            <div className="overflow-y-auto pr-1" style={{ maxHeight: "72vh" }}>
+            <div className="max-h-[42vh] overflow-y-auto pr-1 md:max-h-[72vh]">
               {queue.departments.map((dept) => {
                 const waiting = sortStationQueue(queue.bookings, dept.id);
                 return (
                   <div key={dept.id} className="mb-4">
-                    <div className="mb-1 flex items-center gap-1.5">
+                    <div className="mb-1 flex flex-wrap items-center gap-1.5 md:flex-nowrap">
                       <span className="text-xs text-cf-muted">{dept.name}</span>
                       <Pill color={queueKindColor(dept.queue_kind)}>
                         {queueKindLabel(dept.queue_kind)}
@@ -426,7 +426,7 @@ export function StationDesk() {
                                 stationId: station.id,
                               })
                             }
-                            className={`flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-left text-xs ${
+                            className={`flex min-h-11 items-center justify-between rounded-lg border px-3 py-2.5 text-left text-sm md:min-h-0 md:px-2.5 md:py-1.5 md:text-xs ${
                               isSel
                                 ? "border-cf-primary bg-cf-primary/10 text-cf-ink"
                                 : "border-cf-line bg-cf-surface text-cf-muted"
@@ -474,7 +474,7 @@ export function StationDesk() {
                   autoComplete="off"
                 />
               </label>
-              <Btn type="submit" disabled={!lookupCode.trim()}>
+              <Btn type="submit" className="w-full sm:w-auto" disabled={!lookupCode.trim()}>
                 Look up
               </Btn>
             </form>
@@ -590,12 +590,12 @@ export function StationDesk() {
 
             {!selectedStation ? (
               <p className="rounded-xl border border-cf-line bg-cf-surface px-4 py-3 text-sm text-cf-muted">
-                Select a station on the left to open Call next, mark met, and
-                the walk-in queue.
+                Select a station to open Call next, mark met, and the walk-in
+                queue.
               </p>
             ) : (
               <div>
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-xs text-cf-muted">
                       {queue.facility.name} · {selectedDept?.name}
@@ -767,7 +767,7 @@ export function StationDesk() {
                 </Card>
 
                 <Btn
-                  className="mb-5"
+                  className="mb-5 w-full md:w-auto"
                   disabled={Boolean(busy) || Boolean(servingBooking) || deptQueue.length === 0}
                   onClick={() => void onCallNext()}
                 >
@@ -786,12 +786,12 @@ export function StationDesk() {
                     {deptQueue.slice(0, 10).map((booking, index) => (
                       <div
                         key={booking.id}
-                        className="flex items-center gap-2 rounded-lg border border-cf-line bg-white px-3 py-2"
+                        className="flex items-start gap-2 rounded-lg border border-cf-line bg-white px-3 py-2.5 md:items-center md:py-2"
                       >
-                        <span className="w-5 text-xs text-cf-muted">
+                        <span className="w-5 pt-0.5 text-xs text-cf-muted md:pt-0">
                           {index + 1}
                         </span>
-                        <span className="w-14 font-mono text-xs">
+                        <span className="w-14 pt-0.5 font-mono text-xs md:pt-0">
                           {booking.code}
                         </span>
                         <div className="min-w-0 flex-1">
@@ -801,11 +801,19 @@ export function StationDesk() {
                           <p className="truncate text-xs text-cf-muted">
                             {symptomSummary(booking)}
                           </p>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 md:hidden">
+                            <BookingFlags booking={booking} />
+                            <span className="text-xs text-cf-muted">
+                              {minutesWaiting(booking.created_at)}
+                            </span>
+                          </div>
                         </div>
-                        <BookingFlags booking={booking} />
-                        <span className="w-10 text-right text-xs text-cf-muted">
-                          {minutesWaiting(booking.created_at)}
-                        </span>
+                        <div className="hidden md:contents">
+                          <BookingFlags booking={booking} />
+                          <span className="w-10 text-right text-xs text-cf-muted">
+                            {minutesWaiting(booking.created_at)}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
