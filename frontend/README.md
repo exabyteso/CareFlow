@@ -29,4 +29,5 @@ Dev: `cd frontend && npm install && npm run dev` (port 3000). Staging (Render) b
 
 - [Repository root](../README.md)
 - [ONBOARDING.md](../ONBOARDING.md)
+- [../prototype/](../prototype/) — interactive hospital ticketing prototype (Vite)
 - [docs/api/](../docs/api/) — HTTP chapters

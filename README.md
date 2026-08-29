@@ -12,6 +12,7 @@ This monorepo holds the locked product spec, research, agent scaffolding, and th
 |-----------|--------|--------|
 | `backend/` | [backend/README.md](backend/README.md) | FastAPI (Python 3.12), Alembic, `/health` `/me` `/facilities/recommend` |
 | `frontend/` | [frontend/README.md](frontend/README.md) | Next.js 15 PWA: role picker, care-seeker, hospital desk |
+| `prototype/` | [prototype/README.md](prototype/README.md) | Hospital ticketing UI prototype (Vite) |
 | `docs/` | [docs/README.md](docs/README.md) | Agent SOPs, API reference, testing, [pre-design notes](docs/camlinedev.md) |
 | `docs/product-map/` | [docs/product-map/README.md](docs/product-map/README.md) | Domain map: two sides, queue vs booking |
 | `plans/` | [plans/README.md](plans/README.md) | Committed specs, wave plan template |
